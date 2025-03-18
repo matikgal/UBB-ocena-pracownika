@@ -7,8 +7,9 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-import {onRequest} from "firebase-functions/v2/https";
-import * as logger from "firebase-functions/logger";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// import {onRequest} from "firebase-functions/v2/https";
+// import * as logger from "firebase-functions/logger";
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
