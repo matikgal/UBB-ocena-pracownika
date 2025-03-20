@@ -1,13 +1,17 @@
 import React from "react";
-import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
+import { SidebarProvider} from "./components/ui/sidebar";
 import { AppSidebar } from "./components/AppSideBar";
+import AppHeader from "./components/AppHeader";
+
 
 function App() {
   return (
     <SidebarProvider>
+		
       <AppSidebar />
       <main>
-        <SidebarTrigger />
+	  	<AppHeader />	
+       
       </main>
     </SidebarProvider>
   );
