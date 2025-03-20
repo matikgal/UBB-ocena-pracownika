@@ -1,11 +1,12 @@
+// src/App.tsx
 import './App.css'
-import { Button } from './components/ui/button'
+import AppHeader from './components/AppHeader'
 
 function App() {
 	return (
 		<>
 			<div>
-				<Button variant="ghost">siema</Button>
+				<AppHeader />
 			</div>
 		</>
 	)

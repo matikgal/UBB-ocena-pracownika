@@ -1,1 +1,9 @@
 @import 'tailwindcss';
+
+@theme {
+	--color-ubbprimary: #17376e;
+	--color-ubbsecondary: #122a54;
+	--color-ubbaccent: #881938;
+	--color-ubbhoveraccent: #a41e44;
+	--color-ubbgray: #f5f5f5;
+}
