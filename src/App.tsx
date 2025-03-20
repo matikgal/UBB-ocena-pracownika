@@ -1,20 +1,19 @@
-import React from "react";
-import { SidebarProvider} from "./components/ui/sidebar";
-import { AppSidebar } from "./components/AppSideBar";
+import { SidebarProvider} from './components/ui/sidebar'
+import { AppSidebar } from './components/AppSideBar'
+import AppHeader from './components/AppHeader'
 import AppHeader from "./components/AppHeader";
 
 
 function App() {
-  return (
-    <SidebarProvider>
-		
-      <AppSidebar />
-      <main>
-	  	<AppHeader />	
-       
-      </main>
-    </SidebarProvider>
-  );
+	return (
+		<SidebarProvider>
+			<AppSidebar />
+			<main className="w-screen">
+				<AppHeader />
+				<SidebarTrigger />
+			</main>
+		</SidebarProvider>
+	)
 }
 
-export default App;
+export default App
