@@ -1,15 +1,16 @@
-// src/App.tsx
-import './App.css'
-import AppHeader from './components/AppHeader'
+import React from "react";
+import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
+import { AppSidebar } from "./components/AppSideBar";
 
 function App() {
-	return (
-		<>
-			<div>
-				<AppHeader />
-			</div>
-		</>
-	)
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <main>
+        <SidebarTrigger />
+      </main>
+    </SidebarProvider>
+  );
 }
 
-export default App
+export default App;
