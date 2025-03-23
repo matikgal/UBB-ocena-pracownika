@@ -6,14 +6,24 @@ import {
 	nagrodyWyroznienia,
 } from '../lib/questions'
 
+import {
+	Pagination,
+	PaginationContent,
+	PaginationEllipsis,
+	PaginationItem,
+	PaginationLink,
+	PaginationNext,
+	PaginationPrevious,
+} from './ui/pagination'
+
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip'
 import { GoInfo } from 'react-icons/go'
 
 interface Question {
 	id: string
-	title: string 
+	title: string
 	points: number | string
-	tooltip: string 
+	tooltip: string
 }
 
 interface QuestionsComponentProps {
@@ -45,47 +55,7 @@ export default function QuestionsComponent({ selectedCategory }: QuestionsCompon
 	}
 
 	return (
-<<<<<<< HEAD
-		<div className="p-6 bg-white rounded-b-3xl shadow-md mx-auto min-h-full overflow-hidden">
-			<h2 className="text-2xl font-semibold text-gray-800 mb-6 border-b-2 border-blue-500 pb-2">{selectedCategory}</h2>
-			<ul className="list-decimal pl-6 space-y-3">
-				{questions.map(question => (
-					<li
-						key={question.id}
-						className="text-gray-700 hover:text-blue-600 transition-colors duration-200 flex items-end text-2xl"
-					>
-						<span className="font-bold text-blue-500">
-							{question.id}.({question.points})
-						</span>{' '}
-						{question.title}
-						{question.tooltip && (
-							<TooltipProvider>
-								<Tooltip>
-									<TooltipTrigger>
-										<GoInfo className="scale-75" />
-									</TooltipTrigger>
-									<TooltipContent>
-										{isTooltipOnlyNumbers(question.tooltip) ? (
-											// Jeśli tooltip jest liczbą, znajdź powiązane pytanie
-											findQuestionByTooltip(question.tooltip) ? (
-												<p>{findQuestionByTooltip(question.tooltip)?.title}</p>
-											) : (
-												// Jeśli nie znaleziono, wyświetl oryginalny tooltip
-												<p>{question.tooltip}</p>
-											)
-										) : (
-											// Jeśli tooltip nie jest liczbą, wyświetl go
-											<p>{question.tooltip}</p>
-										)}
-									</TooltipContent>
-								</Tooltip>
-							</TooltipProvider>
-						)}
-					</li>
-				))}
-			</ul>
-=======
-		<div className="p-6 bg-white rounded-b-3xl shadow-md mx-auto h-[calc(100vh-160px)] flex flex-col overflow-hidden">
+		<div className="p-6 bg-white rounded-b-3xl  h-[calc(100vh-160px)] flex flex-col overflow-hidden my-2 mx-2  rounded-lg shadow-lg">
 			<h2 className="text-2xl font-semibold text-gray-800 mb-6 border-b-2 border-blue-500 pb-2">{selectedCategory}</h2>
 			<div className="overflow-y-auto flex-grow">
 				<ul className="list-decimal pl-6 space-y-3">
@@ -96,20 +66,30 @@ export default function QuestionsComponent({ selectedCategory }: QuestionsCompon
 								<TooltipProvider>
 									<Tooltip>
 										<TooltipTrigger>
-											<GoInfo className="scale-75 ml-2" />
+											<GoInfo className="scale-75" />
 										</TooltipTrigger>
 										<TooltipContent>
-											<p>{question.tooltip}</p>
+											{isTooltipOnlyNumbers(question.tooltip) ? (
+												// Jeśli tooltip jest liczbą, znajdź powiązane pytanie
+												findQuestionByTooltip(question.tooltip) ? (
+													<p>{findQuestionByTooltip(question.tooltip)?.title}</p>
+												) : (
+													// Jeśli nie znaleziono, wyświetl oryginalny tooltip
+													<p>{question.tooltip}</p>
+												)
+											) : (
+												// Jeśli tooltip nie jest liczbą, wyświetl go
+												<p>{question.tooltip}</p>
+											)}
 										</TooltipContent>
 									</Tooltip>
 								</TooltipProvider>
 							</div>
-							<p className="font-thin text-lg">Maksymalna ilość punktów ({question.points})</p>
+							<p className="font-thin text-lg">Punktacja ({question.points})</p>
 						</li>
 					))}
 				</ul>
 			</div>
->>>>>>> e07a482904dc0b1cc3b9ba2d7caca1d7993dbb1d
 		</div>
 	)
 }

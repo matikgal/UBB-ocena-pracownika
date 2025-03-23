@@ -1,4 +1,3 @@
-// AppSidebar.tsx
 import { BookOpen, Home } from 'lucide-react'
 import logo from '../assets/Logo.svg'
 import {
@@ -6,41 +5,38 @@ import {
 	SidebarContent,
 	SidebarGroup,
 	SidebarGroupContent,
-	SidebarGroupLabel,
 	SidebarMenu,
 	SidebarMenuItem,
 } from '../components/ui/sidebar'
 
-// Define the shape of a menu item
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../components/ui/accordion'
+import {
+	publikacjeDydaktyczne,
+	podniesienieJakosciNauczania,
+	zajeciaJezykObcy,
+	funkcjeDydaktyczne,
+	nagrodyWyroznienia,
+} from '../lib/questions'
+import { Button } from './ui/button'
+
 interface MenuItem {
 	title: string
 	url: string
 	icon: React.ElementType
+	subcategories: Array<{ id: string; title: string; points: number | string; tooltip: string }>
 }
 
-// Menu items
-const items: MenuItem[] = [
-	{
-		title: 'Ocena',
-		url: '#',
-		icon: Home,
-	},
-]
-
 const categories: MenuItem[] = [
-	{ title: 'Publikacje dykaktyczne', url: '#', icon: BookOpen },
-	{ title: 'Podniesienie jakości nauczania', url: '#', icon: BookOpen },
-	{
-		title: 'Zajęcia w języku obcym, wykłady za granicą',
-		url: '#',
-		icon: BookOpen,
-	},
+	{ title: 'Publikacje dydaktyczne', url: '#', icon: BookOpen, subcategories: publikacjeDydaktyczne },
+	{ title: 'Podniesienie jakości nauczania', url: '#', icon: BookOpen, subcategories: podniesienieJakosciNauczania },
+	{ title: 'Zajęcia w języku obcym, wykłady za granicą', url: '#', icon: BookOpen, subcategories: zajeciaJezykObcy },
 	{
 		title: 'Pełnienie funkcji dydaktycznej (za każdy rok)',
 		url: '#',
 		icon: BookOpen,
+		subcategories: funkcjeDydaktyczne,
 	},
-	{ title: 'Nagrody i wyróznienia', url: '#', icon: BookOpen },
+	{ title: 'Nagrody i wyróżnienia', url: '#', icon: BookOpen, subcategories: nagrodyWyroznienia },
 ]
 
 interface AppSidebarProps {
@@ -49,7 +45,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ setSelectedCategory }: AppSidebarProps) {
 	return (
-		<Sidebar className="">
+		<Sidebar className="border-none">
 			<SidebarContent className="bg-gray-200">
 				<SidebarGroup>
 					<SidebarGroupContent>
@@ -60,18 +56,26 @@ export function AppSidebar({ setSelectedCategory }: AppSidebarProps) {
 									Kategorie
 								</h2>
 							</div>
-							{items.map(item => (
-								<SidebarMenuItem key={item.title} className="mt-4">
+							<SidebarMenuItem className="mt-4 rounded-lg bg-white space-y-2 shadow-lg">
+								<Accordion type="single" collapsible className="w-full">
 									{categories.map(category => (
-										<div
-											key={category.title}
-											onClick={() => setSelectedCategory(category.title)}
-											className="text-gray-700 text-sm px-4 py-2 hover:bg-gray-300 hover:text-gray-900 cursor-pointer rounded-md transition-all duration-200">
-											{category.title}
-										</div>
+										<AccordionItem key={category.title} value={category.title}>
+											<AccordionTrigger className="text-gray-700 text-base px-4 py-2 hover:text-ubbprimary duration-300 cursor-pointer rounded-md transition-all">
+												<p onClick={() => setSelectedCategory(category.title)}>{category.title}</p>
+											</AccordionTrigger>
+											<AccordionContent>
+												<div className="max-h-60 overflow-y-auto">
+													<ul className="text-sm text-gray-500 px-2 space-y-2 list-disc ml-6">
+														{category.subcategories.map(subcategory => (
+															<li key={subcategory.id}>{subcategory.title}</li>
+														))}
+													</ul>
+												</div>
+											</AccordionContent>
+										</AccordionItem>
 									))}
-								</SidebarMenuItem>
-							))}
+								</Accordion>
+							</SidebarMenuItem>
 						</SidebarMenu>
 					</SidebarGroupContent>
 				</SidebarGroup>

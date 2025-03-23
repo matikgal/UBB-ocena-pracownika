@@ -8,7 +8,7 @@ import { SidebarProvider } from './components/ui/sidebar'
 function App() {
 	const [selectedCategory, setSelectedCategory] = useState<string>('Publikacje dykaktyczne')
 	return (
-		<div className="w-screen overflow-hidden max-h-screen">
+		<div className="w-screen overflow-hidden max-h-screen bg-gray-200">
 			<main>
 				<div className="flex w-full ">
 					<div className="">
