@@ -61,12 +61,12 @@ export function AppSidebar({ setSelectedCategory }: AppSidebarProps) {
 								</h2>
 							</div>
 							{items.map(item => (
-								<SidebarMenuItem key={item.title} className="flex flex-col">
+								<SidebarMenuItem key={item.title} className="mt-4">
 									{categories.map(category => (
 										<div
 											key={category.title}
 											onClick={() => setSelectedCategory(category.title)}
-											className="text-ubbsecondary text-wrap max-w-[16rem] m-2 hover:underline cursor-pointer font-semibold">
+											className="text-gray-700 text-sm px-4 py-2 hover:bg-gray-300 hover:text-gray-900 cursor-pointer rounded-md transition-all duration-200">
 											{category.title}
 										</div>
 									))}
