@@ -1,12 +1,11 @@
 import AppHeader from './components/AppHeader'
 import QuestionsComponent from './components/QuestionsComponent'
 import { useState } from 'react'
-import AppNavbar from './components/AppNavbar'
 import { AppSidebar } from './components/AppSideBar'
 import { SidebarProvider } from './components/ui/sidebar'
 
 function App() {
-	const [selectedCategory, setSelectedCategory] = useState<string>('Publikacje dykaktyczne')
+	const [selectedCategory, setSelectedCategory] = useState<string>('Publikacje dydaktyczne')
 	return (
 		<div className="w-screen overflow-hidden max-h-screen bg-gray-200">
 			<main>
