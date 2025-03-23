@@ -7,6 +7,10 @@ import {
 	nagrodyWyroznienia,
 } from '../lib/questions'
 
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip'
+
+import { GoInfo } from 'react-icons/go'
+
 // Define the shape of a question
 interface Question {
 	id: string
@@ -33,8 +37,23 @@ export default function QuestionsComponent({ selectedCategory }: QuestionsCompon
 			<h2 className="text-2xl font-semibold text-gray-800 mb-6 border-b-2 border-blue-500 pb-2">{selectedCategory}</h2>
 			<ul className="list-decimal pl-6 space-y-3">
 				{questions.map(question => (
-					<li key={question.id} className="text-gray-700 hover:text-blue-600 transition-colors duration-200">
-						<span className="font-bold text-blue-500">{question.id}.</span> {question.title}
+					<li
+						key={question.id}
+						className="text-gray-700 hover:text-blue-600 transition-colors duration-200 flex items-end text-2xl">
+						<span className="font-bold text-blue-500">
+							{question.id}.({question.points})
+						</span>{' '}
+						{question.title}
+						<TooltipProvider>
+							<Tooltip>
+								<TooltipTrigger>
+									<GoInfo className="scale-75" />
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>{question.tooltip} asd</p>
+								</TooltipContent>
+							</Tooltip>
+						</TooltipProvider>
 					</li>
 				))}
 			</ul>

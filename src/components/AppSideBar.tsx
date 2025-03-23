@@ -1,6 +1,6 @@
 // AppSidebar.tsx
 import { BookOpen, Home } from 'lucide-react'
-import logo from '../assets/LogoUBB.svg'
+import logo from '../assets/Logo.svg'
 import {
 	Sidebar,
 	SidebarContent,
@@ -50,13 +50,15 @@ interface AppSidebarProps {
 export function AppSidebar({ setSelectedCategory }: AppSidebarProps) {
 	return (
 		<Sidebar className="">
-			<SidebarContent className="bg-ubbprimary">
+			<SidebarContent className="bg-gray-200">
 				<SidebarGroup>
 					<SidebarGroupContent>
 						<SidebarMenu>
 							<div>
 								<img src={logo} alt="Godło" className="w-auto h-full object-cover" />
-								<h2 className="font-bold text-2xl text-white mt-16 ml-2 border-b-2 border-white w-3/4">Kategorie</h2>
+								<h2 className="font-bold text-2xl text-ubbsecondary mt-16 ml-2 border-b-2 border-white w-3/4">
+									Kategorie
+								</h2>
 							</div>
 							{items.map(item => (
 								<SidebarMenuItem key={item.title} className="flex flex-col">
@@ -64,7 +66,7 @@ export function AppSidebar({ setSelectedCategory }: AppSidebarProps) {
 										<div
 											key={category.title}
 											onClick={() => setSelectedCategory(category.title)}
-											className="text-white text-wrap max-w-[16rem] m-2 hover:underline cursor-pointer font-semibold">
+											className="text-ubbsecondary text-wrap max-w-[16rem] m-2 hover:underline cursor-pointer font-semibold">
 											{category.title}
 										</div>
 									))}
