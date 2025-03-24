@@ -12,7 +12,7 @@ export default function AppHeader() {
 					{/* <img src={logo} alt="Godło" className="w-auto h-full object-cover" /> */}
 					<div className=" right-auto text-right">
 						<p className="font-semibold text-2xl">Jakub Gałosz</p>
-						<p className="font-thin">Profesor UBB</p>
+						<p className="font-thin">halo</p>
 					</div>
 					<div className="rounded-full h-12 w-12 bg-[url('./assets/ts.jpg')] bg-cover bg-center border-white border"></div>
 				</div>

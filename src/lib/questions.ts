@@ -40,12 +40,6 @@ export const funkcjeDydaktyczne = [
   { id: "4.4", title: "Kierowanie edycją studiów podyplomowych", points: 3, tooltip: [] }
 ];
 
-export const nagrodyWyroznienia = [
-  { id: "5.1", title: "Indywidualna lub zespołowa nagroda Ministra Edukacji i Nauki", points: 20, tooltip: [] },
-  { id: "5.2", title: "Promotorstwo nagrodzonych prac dyplomowych lub doktorskich", points: 2, tooltip: [] }
-];
-
-
 export const publikacjeDydaktyczne = [
   { id: "1.1", title: "Autorstwo podręcznika akademickiego w języku obcym", points: 40, tooltip: [zasadyPodzialuPunktow[0].title] },
   { id: "1.2", title: "Autorstwo podręcznika akademickiego w języku polskim", points: 30, tooltip: [zasadyPodzialuPunktow[0].title]  },
@@ -58,4 +52,9 @@ export const publikacjeDydaktyczne = [
   { id: "1.9", title: "Autorstwo publikacji metodycznej lub popularnonaukowej", points: 3, tooltip: [zasadyPodzialuPunktow[0].title]  },
   { id: "1.10", title: "Recenzja podręcznika akademickiego lub szkolnego", points: 5, tooltip: [] },
   { id: "1.11", title: "Redakcja wydawnictwa zwartego zawierającego recenzowane publikacje studentów", points: 10, tooltip: [] }
+];
+
+export const nagrodyWyroznienia = [
+  { id: "5.1", title: "Indywidualna lub zespołowa nagroda Ministra Edukacji i Nauki", points: 20, tooltip: [] },
+  { id: "5.2", title: "Promotorstwo nagrodzonych prac dyplomowych lub doktorskich", points: 2, tooltip: [] }
 ];

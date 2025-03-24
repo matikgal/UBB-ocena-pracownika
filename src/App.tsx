@@ -1,7 +1,6 @@
 import AppHeader from './components/AppHeader'
 import QuestionsComponent from './components/QuestionsComponent'
 import { useState } from 'react'
-import AppNavbar from './components/AppNavbar'
 import { AppSidebar } from './components/AppSideBar'
 import { SidebarProvider } from './components/ui/sidebar'
 
