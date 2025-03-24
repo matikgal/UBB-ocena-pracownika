@@ -32,7 +32,7 @@ interface QuestionsComponentProps {
 
 export default function QuestionsComponent({ selectedCategory }: QuestionsComponentProps) {
 	const categoryMap: Record<string, Question[]> = {
-		'Publikacje dykaktyczne': publikacjeDydaktyczne,
+		'Publikacje dydaktyczne': publikacjeDydaktyczne,
 		'Podniesienie jakości nauczania': podniesienieJakosciNauczania,
 		'Zajęcia w języku obcym, wykłady za granicą': zajeciaJezykObcy,
 		'Pełnienie funkcji dydaktycznej (za każdy rok)': funkcjeDydaktyczne,

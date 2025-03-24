@@ -6,7 +6,7 @@ import { AppSidebar } from './components/AppSideBar'
 import { SidebarProvider } from './components/ui/sidebar'
 
 function App() {
-	const [selectedCategory, setSelectedCategory] = useState<string>('Publikacje dykaktyczne')
+	const [selectedCategory, setSelectedCategory] = useState<string>('Publikacje dydaktyczne')
 	return (
 		<div className="w-screen overflow-hidden max-h-screen bg-gray-200">
 			<main>
