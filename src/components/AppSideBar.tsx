@@ -7,6 +7,7 @@ import {
 	SidebarGroupContent,
 	SidebarMenu,
 	SidebarMenuItem,
+	SidebarProvider, // Add this import
 } from '../components/ui/sidebar'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar'
 import { Button } from '../components/ui/button'
@@ -37,7 +38,12 @@ const categories: MenuItem[] = [
 		icon: BookOpen,
 		subcategories: funkcjeDydaktyczne,
 	},
-	{ title: 'Nagrody i wyróżnienia', url: '#', icon: BookOpen, subcategories: nagrodyWyroznienia },
+	{ 
+		title: 'Nagrody i wyróznienia', // Make sure this matches exactly what's in your categories array
+		url: '#', 
+		icon: BookOpen, 
+		subcategories: nagrodyWyroznienia 
+	},
 ]
 
 interface UserData {
@@ -46,10 +52,112 @@ interface UserData {
 	avatar?: string
 }
 
+// Update the AppSidebarProps interface to include selectedCategory
 interface AppSidebarProps {
 	setSelectedCategory: (category: string) => void
+	selectedCategory: string // Add this line
 	userData?: UserData
 	onLogout?: () => void
+}
+
+export function AppSidebar({
+	setSelectedCategory,
+	selectedCategory,
+	userData = { name: 'Użytkownik', email: 'brak@email.com' },
+	onLogout = () => {},
+}: AppSidebarProps) {
+	const [isOpen, setIsOpen] = useState(false)
+
+	return (
+		<>
+			<Button
+				variant="ghost"
+				size="icon"
+				className="lg:hidden fixed top-4 left-4 z-50"
+				onClick={() => setIsOpen(!isOpen)}>
+				<Menu className="h-6 w-6" />
+			</Button>
+			<div
+				className={`fixed lg:relative lg:block transition-transform duration-300 h-full ${
+					isOpen ? 'translate-x-0' : '-translate-x-full'
+				} lg:translate-x-0 z-40 w-72`}>
+				<SidebarProvider>
+					<Sidebar className="h-full border-0">
+						<SidebarContent className="bg-gray-200 flex flex-col w-full h-full">
+							<SidebarGroup>
+								<SidebarGroupContent>
+									<SidebarMenu>
+										<div>
+											<img src={logo} alt="Godło" className="w-auto h-full object-cover" />
+											<div className="mt-16 ml-2">
+												<h2 className="text-2xl font-semibold text-ubbsecondary">Menu główne</h2>
+												<p className="text-sm text-gray-500 mt-1">Wybierz kategorię do oceny</p>
+											</div>
+										</div>
+										<div className="space-y-2 mt-6">
+											{categories.map(category => {
+												// Check if this category is the selected one
+												const isSelected = category.title === selectedCategory
+												
+												return (
+													<SidebarMenuItem key={category.title} className="group relative">
+														<div
+															className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 ease-in-out cursor-pointer ${
+																isSelected 
+																	? 'bg-white text-ubbprimary font-medium' 
+																	: 'text-gray-700 hover:text-ubbprimary hover:bg-white/80'
+															}`}
+															onClick={() => {
+																setSelectedCategory(category.title)
+																setIsOpen(false)
+															}}>
+															<div className="flex items-center space-x-3">
+																<category.icon className={`w-5 h-5 ${
+																	isSelected 
+																		? 'text-ubbprimary' 
+																		: 'text-gray-400 group-hover:text-ubbprimary'
+																} transition-colors duration-200`} />
+																<p className="text-sm font-medium">{category.title}</p>
+															</div>
+															{isSelected && (
+																<div className="absolute right-4">
+																	<svg
+																		className="w-4 h-4 text-ubbprimary"
+																		fill="none"
+																		stroke="currentColor"
+																		viewBox="0 0 24 24">
+																		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+																	</svg>
+																</div>
+															)}
+															{!isSelected && (
+																<div className="absolute right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+																	<svg
+																		className="w-4 h-4 text-ubbprimary"
+																		fill="none"
+																		stroke="currentColor"
+																		viewBox="0 0 24 24">
+																		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+																	</svg>
+																</div>
+															)}
+														</div>
+													</SidebarMenuItem>
+												)
+											})}
+										</div>
+									</SidebarMenu>
+								</SidebarGroupContent>
+							</SidebarGroup>
+							<div className="mt-auto p-4">
+								<UserTile userData={userData} onLogout={onLogout} />
+							</div>
+						</SidebarContent>
+					</Sidebar>
+				</SidebarProvider>
+			</div>
+		</>
+	)
 }
 
 function UserTile({
@@ -80,76 +188,5 @@ function UserTile({
 				</Button>
 			</div>
 		</div>
-	)
-}
-
-export function AppSidebar({
-	setSelectedCategory,
-	userData = { name: 'Użytkownik', email: 'brak@email.com' },
-	onLogout = () => {},
-}: AppSidebarProps) {
-	const [isOpen, setIsOpen] = useState(false)
-
-	return (
-		<>
-			<Button
-				variant="ghost"
-				size="icon"
-				className="lg:hidden fixed top-4 left-4 z-50"
-				onClick={() => setIsOpen(!isOpen)}>
-				<Menu className="h-6 w-6" />
-			</Button>
-			<div
-				className={`fixed lg:static lg:block transition-transform duration-300 ${
-					isOpen ? 'translate-x-0' : '-translate-x-full'
-				} lg:translate-x-0 z-40 h-full w-full lg:w-auto`}>
-				<Sidebar className="h-screen border-0">
-					<SidebarContent className="bg-gray-200 flex flex-col w-full h-full">
-						<SidebarGroup>
-							<SidebarGroupContent>
-								<SidebarMenu>
-									<div>
-										<img src={logo} alt="Godło" className="w-auto h-full object-cover" />
-										<div className="mt-16 ml-2">
-											<h2 className="text-2xl font-semibold text-ubbsecondary">Menu główne</h2>
-											<p className="text-sm text-gray-500 mt-1">Wybierz kategorię do oceny</p>
-										</div>
-									</div>
-									<div className="space-y-2 mt-6">
-										{categories.map(category => (
-											<SidebarMenuItem key={category.title} className="group relative">
-												<div
-													className="flex items-center px-4 py-3 text-gray-700 hover:text-ubbprimary hover:bg-white/80 rounded-lg transition-all duration-200 ease-in-out cursor-pointer"
-													onClick={() => {
-														setSelectedCategory(category.title)
-														setIsOpen(false)
-													}}>
-													<div className="flex items-center space-x-3">
-														<category.icon className="w-5 h-5 text-gray-400 group-hover:text-ubbprimary transition-colors duration-200" />
-														<p className="text-sm font-medium">{category.title}</p>
-													</div>
-													<div className="absolute right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-														<svg
-															className="w-4 h-4 text-ubbprimary"
-															fill="none"
-															stroke="currentColor"
-															viewBox="0 0 24 24">
-															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-														</svg>
-													</div>
-												</div>
-											</SidebarMenuItem>
-										))}
-									</div>
-								</SidebarMenu>
-							</SidebarGroupContent>
-						</SidebarGroup>
-						<div className="mt-auto p-4">
-							<UserTile userData={userData} onLogout={onLogout} />
-						</div>
-					</SidebarContent>
-				</Sidebar>
-			</div>
-		</>
 	)
 }
