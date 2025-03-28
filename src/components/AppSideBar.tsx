@@ -38,11 +38,11 @@ const categories: MenuItem[] = [
 		icon: BookOpen,
 		subcategories: funkcjeDydaktyczne,
 	},
-	{ 
+	{
 		title: 'Nagrody i wyróznienia', // Make sure this matches exactly what's in your categories array
-		url: '#', 
-		icon: BookOpen, 
-		subcategories: nagrodyWyroznienia 
+		url: '#',
+		icon: BookOpen,
+		subcategories: nagrodyWyroznienia,
 	},
 ]
 
@@ -83,7 +83,7 @@ export function AppSidebar({
 			<div
 				className={`fixed lg:relative lg:block transition-transform duration-300 h-full ${
 					isOpen ? 'translate-x-0' : '-translate-x-full'
-				} lg:translate-x-0 z-40 w-72`}>
+				} lg:translate-x-0 z-40 w-64 shadow-lg`}>
 				<SidebarProvider>
 					<Sidebar className="h-full border-0">
 						<SidebarContent className="bg-gray-200 flex flex-col w-full h-full">
@@ -101,13 +101,13 @@ export function AppSidebar({
 											{categories.map(category => {
 												// Check if this category is the selected one
 												const isSelected = category.title === selectedCategory
-												
+
 												return (
 													<SidebarMenuItem key={category.title} className="group relative">
 														<div
 															className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 ease-in-out cursor-pointer ${
-																isSelected 
-																	? 'bg-white text-ubbprimary font-medium' 
+																isSelected
+																	? 'bg-white text-ubbprimary font-medium'
 																	: 'text-gray-700 hover:text-ubbprimary hover:bg-white/80'
 															}`}
 															onClick={() => {
@@ -115,11 +115,11 @@ export function AppSidebar({
 																setIsOpen(false)
 															}}>
 															<div className="flex items-center space-x-3">
-																<category.icon className={`w-5 h-5 ${
-																	isSelected 
-																		? 'text-ubbprimary' 
-																		: 'text-gray-400 group-hover:text-ubbprimary'
-																} transition-colors duration-200`} />
+																<category.icon
+																	className={`w-5 h-5 ${
+																		isSelected ? 'text-ubbprimary' : 'text-gray-400 group-hover:text-ubbprimary'
+																	} transition-colors duration-200`}
+																/>
 																<p className="text-sm font-medium">{category.title}</p>
 															</div>
 															{isSelected && (
@@ -129,7 +129,12 @@ export function AppSidebar({
 																		fill="none"
 																		stroke="currentColor"
 																		viewBox="0 0 24 24">
-																		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+																		<path
+																			strokeLinecap="round"
+																			strokeLinejoin="round"
+																			strokeWidth={2}
+																			d="M9 5l7 7-7 7"
+																		/>
 																	</svg>
 																</div>
 															)}
@@ -140,7 +145,12 @@ export function AppSidebar({
 																		fill="none"
 																		stroke="currentColor"
 																		viewBox="0 0 24 24">
-																		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+																		<path
+																			strokeLinecap="round"
+																			strokeLinejoin="round"
+																			strokeWidth={2}
+																			d="M9 5l7 7-7 7"
+																		/>
 																	</svg>
 																</div>
 															)}
@@ -183,9 +193,7 @@ function UserTile({
 					</AvatarFallback>
 				</Avatar>
 				<div className="flex-1 min-w-0">
-					<p className="text-sm font-medium text-gray-900 truncate">
-						{userData.name} 
-					</p>
+					<p className="text-sm font-medium text-gray-900 truncate">{userData.name}</p>
 					<p className="text-sm text-gray-500 truncate">{userData.email}</p>
 				</div>
 				<Button variant="ghost" size="icon" onClick={onLogout} className="h-8 w-8">

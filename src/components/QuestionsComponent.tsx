@@ -76,14 +76,14 @@ export default function QuestionsComponent({
 	}
 
 	// Update the return statement in QuestionsComponent
-	
+
 	return (
 		<div className="h-full p-4 lg:p-6 bg-white rounded-lg shadow-lg flex flex-col mx-2 my-2 overflow-hidden">
 			<h2 className="text-xl lg:text-2xl font-semibold text-gray-800 mb-4 lg:mb-6 border-b-2 border-ubbprimary pb-2">
 				{selectedCategory}
 			</h2>
-			<div className="overflow-y-auto flex-grow scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
-				<ul className="space-y-3 lg:space-y-4 pr-2">
+			<div className="overflow-y-auto flex-grow pr-2 custom-scrollbar">
+				<ul className="space-y-3 lg:space-y-4">
 					{questions.map(question => (
 						<li key={question.id} className="bg-gray-50 rounded-lg p-3 lg:p-4 hover:bg-gray-100 transition-colors">
 							<div className="flex items-start space-x-3 lg:space-x-4">
@@ -142,8 +142,8 @@ export default function QuestionsComponent({
 					onClick={onPreviousCategory}
 					disabled={isFirstCategory}
 					className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
-						isFirstCategory 
-							? 'text-gray-400 border-gray-200' 
+						isFirstCategory
+							? 'text-gray-400 border-gray-200'
 							: 'text-ubbprimary border-ubbprimary hover:bg-ubbprimary/10'
 					}`}>
 					<ChevronLeft className="h-4 w-4" />
@@ -157,8 +157,8 @@ export default function QuestionsComponent({
 					onClick={onNextCategory}
 					disabled={isLastCategory}
 					className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
-						isLastCategory 
-							? 'text-gray-400 border-gray-200' 
+						isLastCategory
+							? 'text-gray-400 border-gray-200'
 							: 'text-ubbprimary border-ubbprimary hover:bg-ubbprimary/10'
 					}`}>
 					Następna kategoria

@@ -51,19 +51,28 @@ function categoryToSlug(category: string): string {
 	return category
 		.toLowerCase()
 		.replace(/\s+/g, '-')
-		.replace(/[^\w\-]+/g, '')
+		.replace(/[^\w-]+/g, '')
 }
 
 // The issue is in the slugToCategory function and the categories array
 
 // Helper function to convert URL slug to category name
 function slugToCategory(slug: string, categories: string[]): string {
-  // Check for the specific case of "nagrody-i-wyroznienia"
-  if (slug === 'nagrody-i-wyroznienia') {
-    return 'Nagrody i wyróznienia';
-  }
-  
-  return categories.find(category => categoryToSlug(category) === slug) || categories[0];
+	// Check for specific cases with special characters
+	if (slug === 'nagrody-i-wyroznienia') {
+		return 'Nagrody i wyróznienia'
+	}
+	if (slug === 'zajecia-w-jezyku-obcym-wyklady-za-granica') {
+		return 'Zajęcia w języku obcym, wykłady za granicą'
+	}
+	if (slug === 'pelnienie-funkcji-dydaktycznej-za-kazdy-rok') {
+		return 'Pełnienie funkcji dydaktycznej (za każdy rok)'
+	}
+	if (slug === 'podniesienie-jakosci-nauczania') {
+		return 'Podniesienie jakości nauczania'
+	}
+
+	return categories.find(category => categoryToSlug(category) === slug) || categories[0]
 }
 
 function CategoryLayout({ categories, onLogout }: { categories: string[]; onLogout: () => void }) {
@@ -92,18 +101,18 @@ function CategoryLayout({ categories, onLogout }: { categories: string[]; onLogo
 	}
 
 	return (
-		<>
+		<div className="flex w-full">
 			<AppSidebar
 				setSelectedCategory={setSelectedCategory}
 				selectedCategory={selectedCategory}
 				onLogout={onLogout}
 				userData={{ name: 'Jakub Gałosz', email: 'jakub.galosz@example.com' }}
 			/>
-			<div className="flex-1 flex flex-col ml-18 mr-2">
-				<div className="mb-2">
+			<div className="flex-1 flex flex-col pl-8 pr-4 pt-2 ">
+				<div className="mb-4">
 					<AppHeader />
 				</div>
-				<main className="flex-1 overflow-hidden">
+				<main className="flex-1 overflow-hidden pb-4">
 					<QuestionsComponent
 						selectedCategory={selectedCategory}
 						onPreviousCategory={handlePreviousCategory}
@@ -112,6 +121,6 @@ function CategoryLayout({ categories, onLogout }: { categories: string[]; onLogo
 					/>
 				</main>
 			</div>
-		</>
+		</div>
 	)
 }
