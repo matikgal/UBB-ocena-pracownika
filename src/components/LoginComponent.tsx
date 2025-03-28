@@ -1,21 +1,17 @@
 import { useState } from 'react'
 import { Button } from './ui/button'
-import { Input } from './ui/input'
 import logo from '../assets/Logo.svg'
+import { useAuth } from '../contexts/AuthContext'
 
 interface LoginProps {
-  onLogin: (email: string, password: string) => void
-  isLoading?: boolean
+  error?: string | null;
 }
 
-export default function LoginComponent({ onLogin, isLoading = false }: LoginProps) {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onLogin(email, password)
-  }
+export default function LoginComponent({ error: propError }: LoginProps) {
+  const { login, isLoading, error: authError } = useAuth();
+  
+  // Use error from props or from auth context
+  const error = propError || authError;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -26,45 +22,19 @@ export default function LoginComponent({ onLogin, isLoading = false }: LoginProp
           <p className="text-gray-600 mt-2">Uniwersytet Bielsko-Bialski</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium text-gray-700">
-              Email
-            </label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="twoj@email.com"
-              required
-              className="w-full text-gray-900"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium text-gray-700">
-              Hasło
-            </label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              className="w-full text-gray-900"
-            />
-          </div>
-
+        <div className="space-y-6">
+          <p className="text-center text-gray-700">
+            Zaloguj się, aby uzyskać dostęp do systemu oceny pracowników.
+          </p>
+          
           <Button
-            type="submit"
+            onClick={login}
             className="w-full bg-ubbprimary hover:bg-ubbprimary/90"
             disabled={isLoading}
           >
-            {isLoading ? 'Logowanie...' : 'Zaloguj się'}
+            {isLoading ? 'Ładowanie...' : 'Zaloguj się przez Keycloak'}
           </Button>
-        </form>
+        </div>
       </div>
     </div>
   )

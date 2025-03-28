@@ -4,8 +4,10 @@
 
 import { User } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
+import { useAuth } from '../contexts/AuthContext';
 
 export default function AppHeader() {
+	const { userData } = useAuth();
 	return (
 		<div className="w-full">
 			<div className="bg-ubbprimary h-24 overflow-hidden flex items-center justify-between rounded-b-lg mx-2 shadow-lg">
@@ -17,8 +19,8 @@ export default function AppHeader() {
 					{/* <img src={godlo} alt="Godło" className="w-auto h-full object-cover py-7" /> */}
 					{/* <img src={logo} alt="Godło" className="w-auto h-full object-cover" /> */}
 					<div className="text-right hidden sm:block">
-						<p className="text-white font-medium text-sm lg:text-base">Jakub Gałosz</p>
-						<p className="text-white/70 text-xs lg:text-sm">Pracownik naukowy</p>
+					<span className="text-sm font-medium text-white">{userData?.name || 'Użytkownik'}</span>
+						
 					</div>
 					<Avatar className="h-10 w-10 lg:h-12 lg:w-12 border-2 border-white/20">
 						<AvatarImage src="./assets/ts.jpg" />

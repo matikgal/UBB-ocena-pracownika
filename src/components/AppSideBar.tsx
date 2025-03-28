@@ -46,10 +46,13 @@ const categories: MenuItem[] = [
 	},
 ]
 
+// Update the UserData interface to match Keycloak data
 interface UserData {
 	name: string
+	lastName?: string
 	email: string
 	avatar?: string
+	username?: string
 }
 
 // Update the AppSidebarProps interface to include selectedCategory
@@ -180,7 +183,9 @@ function UserTile({
 					</AvatarFallback>
 				</Avatar>
 				<div className="flex-1 min-w-0">
-					<p className="text-sm font-medium text-gray-900 truncate">{userData.name}</p>
+					<p className="text-sm font-medium text-gray-900 truncate">
+						{userData.name} 
+					</p>
 					<p className="text-sm text-gray-500 truncate">{userData.email}</p>
 				</div>
 				<Button variant="ghost" size="icon" onClick={onLogout} className="h-8 w-8">
@@ -190,3 +195,5 @@ function UserTile({
 		</div>
 	)
 }
+
+// Remove the extra code block that was added at the end of the file
