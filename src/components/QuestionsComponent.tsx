@@ -4,66 +4,157 @@ import {
 	zajeciaJezykObcy,
 	funkcjeDydaktyczne,
 	nagrodyWyroznienia,
-  } from '../lib/questions'
-  
-  import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip'
-  import { GoInfo } from 'react-icons/go'
-  
-  interface Question {
+} from '../lib/questions'
+
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip'
+import { GoInfo } from 'react-icons/go'
+import { Checkbox } from '../components/ui/checkbox'
+import { Input } from '../components/ui/input'
+import { useState } from 'react'
+import { Button } from './ui/button'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+
+interface Question {
 	id: string
 	title: string
 	points: number | string
-	tooltip: string[] // Tooltip is an array of strings
-  }
-  
-  interface QuestionsComponentProps {
+	tooltip: string[]
+}
+
+interface QuestionsComponentProps {
 	selectedCategory: string
-  }
-  
-  export default function QuestionsComponent({ selectedCategory }: QuestionsComponentProps) {
+	onPreviousCategory: () => void
+	onNextCategory: () => void
+	categories: string[]
+}
+
+interface QuestionState {
+	checked: boolean
+	value: string
+}
+
+export default function QuestionsComponent({
+	selectedCategory,
+	onPreviousCategory,
+	onNextCategory,
+	categories,
+}: QuestionsComponentProps) {
+	const [questionStates, setQuestionStates] = useState<Record<string, QuestionState>>({})
+
 	const categoryMap: Record<string, Question[]> = {
-	  'Publikacje dydaktyczne': publikacjeDydaktyczne,
-	  'Podniesienie jakości nauczania': podniesienieJakosciNauczania,
-	  'Zajęcia w języku obcym, wykłady za granicą': zajeciaJezykObcy,
-	  'Pełnienie funkcji dydaktycznej (za każdy rok)': funkcjeDydaktyczne,
-	  'Nagrody i wyróznienia': nagrodyWyroznienia,
+		'Publikacje dydaktyczne': publikacjeDydaktyczne,
+		'Podniesienie jakości nauczania': podniesienieJakosciNauczania,
+		'Zajęcia w języku obcym, wykłady za granicą': zajeciaJezykObcy,
+		'Pełnienie funkcji dydaktycznej (za każdy rok)': funkcjeDydaktyczne,
+		'Nagrody i wyróznienia': nagrodyWyroznienia,
 	}
-	console.log(selectedCategory)
+
 	const questions = categoryMap[selectedCategory] || nagrodyWyroznienia
-  
+
+	const currentIndex = categories?.indexOf(selectedCategory) ?? -1
+	const isFirstCategory = currentIndex === 0 || !categories
+	const isLastCategory = categories ? currentIndex === categories.length - 1 : true
+
+	const handleCheckboxChange = (questionId: string) => {
+		setQuestionStates(prev => ({
+			...prev,
+			[questionId]: {
+				...prev[questionId],
+				checked: !prev[questionId]?.checked,
+			},
+		}))
+	}
+
+	const handleValueChange = (questionId: string, value: string) => {
+		setQuestionStates(prev => ({
+			...prev,
+			[questionId]: {
+				...prev[questionId],
+				value,
+			},
+		}))
+	}
+
 	return (
-	  <div className="p-6 bg-white rounded-lg shadow-lg h-[calc(100vh-160px)] flex flex-col overflow-hidden mx-2 mt-4">
-		<h2 className="text-2xl font-semibold text-gray-800 mb-6 border-b-2 border-blue-500 pb-2">{selectedCategory}</h2>
-		<div className="overflow-y-auto flex-grow">
-		  <ul className="list-decimal pl-6 space-y-3">
-			{questions.map((question) => (
-			  <li key={question.id} className="text-gray-700 flex flex-col text-xl">
-				<div className="flex items-center">
-				  <span className="font-bold text-blue-500 mr-2">{question.id}</span> {question.title}
-  
-				  {/* Render the tooltip only if the tooltip array is not empty */}
-				  {question.tooltip.length > 0 && (
-					<TooltipProvider>
-					  <Tooltip>
-						<TooltipTrigger>
-						  <GoInfo className="scale-75" />
-						</TooltipTrigger>
-						<TooltipContent>
-						  {/* Render each tooltip item */}
-						  {question.tooltip.map((tooltipItem, index) => (
-							<p key={index}>{tooltipItem}</p>
-						  ))}
-						</TooltipContent>
-					  </Tooltip>
-					</TooltipProvider>
-				  )}
-				</div>
-				<p className="font-thin text-lg">Maksymalna ilość punktów ({question.points})</p>
-			  </li>
-			))}
-		  </ul>
+		<div className="p-4 lg:p-6 bg-white rounded-lg shadow-lg flex flex-col mt-4 mx-2 h-[calc(100vh-127px)]">
+			<h2 className="text-xl lg:text-2xl font-semibold text-gray-800 mb-4 lg:mb-6 border-b-2 border-ubbprimary pb-2">
+				{selectedCategory}
+			</h2>
+			<div className="overflow-y-auto flex-grow scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
+				<ul className="space-y-3 lg:space-y-4 pr-2">
+					{questions.map(question => (
+						<li key={question.id} className="bg-gray-50 rounded-lg p-3 lg:p-4 hover:bg-gray-100 transition-colors">
+							<div className="flex items-start space-x-3 lg:space-x-4">
+								<Checkbox
+									id={`checkbox-${question.id}`}
+									checked={questionStates[question.id]?.checked || false}
+									onCheckedChange={() => handleCheckboxChange(question.id)}
+									className="mt-1"
+								/>
+								<div className="flex-1">
+									<div className="flex items-center flex-wrap">
+										<span className="font-bold text-ubbprimary mr-2 text-sm lg:text-base">{question.id}</span>
+										<span className="text-gray-700 text-sm lg:text-base">{question.title}</span>
+
+										{question.tooltip.length > 0 && (
+											<TooltipProvider>
+												<Tooltip>
+													<TooltipTrigger>
+														<GoInfo className="scale-75 ml-2 text-gray-400" />
+													</TooltipTrigger>
+													<TooltipContent>
+														{question.tooltip.map((tooltipItem, index) => (
+															<p key={index}>{tooltipItem}</p>
+														))}
+													</TooltipContent>
+												</Tooltip>
+											</TooltipProvider>
+										)}
+									</div>
+									<div className="mt-2 flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+										<p className="text-xs lg:text-sm text-gray-500">Maksymalna ilość punktów: {question.points}</p>
+										{questionStates[question.id]?.checked && (
+											<div className="flex items-center space-x-2">
+												<Input
+													type="number"
+													value={questionStates[question.id]?.value || ''}
+													onChange={e => handleValueChange(question.id, e.target.value)}
+													className="w-20 lg:w-24 h-7 lg:h-8 text-xs lg:text-sm"
+													min="0"
+													max={question.points}
+													placeholder="0"
+												/>
+												<span className="text-xs lg:text-sm text-gray-500">/ {question.points}</span>
+											</div>
+										)}
+									</div>
+								</div>
+							</div>
+						</li>
+					))}
+				</ul>
+			</div>
+			<div className="flex justify-between items-center mt-4 pt-4 border-t">
+				<Button
+					variant="outline"
+					onClick={onPreviousCategory}
+					disabled={isFirstCategory}
+					className="flex items-center gap-2">
+					<ChevronLeft className="h-4 w-4" />
+					Poprzednia kategoria
+				</Button>
+				<span className="text-sm text-gray-500">
+					{currentIndex + 1} z {categories?.length ?? 0}
+				</span>
+				<Button
+					variant="outline"
+					onClick={onNextCategory}
+					disabled={isLastCategory}
+					className="flex items-center gap-2">
+					Następna kategoria
+					<ChevronRight className="h-4 w-4" />
+				</Button>
+			</div>
 		</div>
-	  </div>
 	)
-  }
-  
+}
