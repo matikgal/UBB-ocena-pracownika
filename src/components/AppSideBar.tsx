@@ -1,4 +1,4 @@
-import { BookOpen, LogOut, Menu } from 'lucide-react'
+import { BookOpen, LogOut, Menu, Edit } from 'lucide-react'
 import logo from '../assets/Logo.svg'
 import {
 	Sidebar,
@@ -58,9 +58,10 @@ interface UserData {
 // Update the AppSidebarProps interface to include selectedCategory
 interface AppSidebarProps {
 	setSelectedCategory: (category: string) => void
-	selectedCategory: string // Add this line
+	selectedCategory: string
 	userData?: UserData
 	onLogout?: () => void
+	onEditQuestions?: () => void // Add this line
 }
 
 export function AppSidebar({
@@ -68,6 +69,7 @@ export function AppSidebar({
 	selectedCategory,
 	userData = { name: 'Użytkownik', email: 'brak@email.com' },
 	onLogout = () => {},
+	onEditQuestions = () => {}, // Add default function
 }: AppSidebarProps) {
 	const [isOpen, setIsOpen] = useState(false)
 
@@ -162,6 +164,17 @@ export function AppSidebar({
 									</SidebarMenu>
 								</SidebarGroupContent>
 							</SidebarGroup>
+
+							{/* Add Edit Questions Button */}
+							<div className="px-4 mt-8">
+								<Button
+									onClick={onEditQuestions}
+									className="w-full bg-ubbprimary hover:bg-ubbprimary/90 text-white flex items-center justify-center gap-2 py-2  cursor-pointer">
+									<Edit className="h-4 w-4" />
+									<span>Edytuj pytania</span>
+								</Button>
+							</div>
+
 							<div className="mt-auto p-4">
 								<UserTile userData={userData} onLogout={onLogout} />
 							</div>
@@ -196,12 +209,10 @@ function UserTile({
 					<p className="text-sm font-medium text-gray-900 truncate">{userData.name}</p>
 					<p className="text-sm text-gray-500 truncate">{userData.email}</p>
 				</div>
-				<Button variant="ghost" size="icon" onClick={onLogout} className="h-8 w-8">
+				<Button variant="ghost" size="icon" onClick={onLogout} className="h-8 w-8 cursor-pointer">
 					<LogOut className="h-4 w-4" />
 				</Button>
 			</div>
 		</div>
 	)
 }
-
-// Remove the extra code block that was added at the end of the file

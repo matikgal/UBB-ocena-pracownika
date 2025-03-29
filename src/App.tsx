@@ -5,9 +5,11 @@ import { useState } from 'react'
 import { AppSidebar } from './components/AppSideBar'
 import LoginComponent from './components/LoginComponent'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { EditQuestionsComponent } from './components/EditQuestionsComponent'
 
 function AppContent() {
 	const [selectedCategory, setSelectedCategory] = useState<string>('Publikacje dydaktyczne')
+	const [isEditingQuestions, setIsEditingQuestions] = useState<boolean>(false)
 	const { isAuthenticated, isLoading, logout, userData, error } = useAuth()
 
 	// Define categories array to match the sidebar categories
@@ -48,6 +50,20 @@ function AppContent() {
 		}
 	}
 
+	const handleEditQuestions = () => {
+		setIsEditingQuestions(true)
+	}
+
+	const handleCloseEdit = () => {
+		setIsEditingQuestions(false)
+	}
+
+	const handleSaveQuestions = (updatedQuestions: any) => {
+		// Here you would typically save the updated questions to your backend
+		console.log('Updated questions:', updatedQuestions)
+		// You might need to update your state or refresh data from the server
+	}
+
 	// Show main application if authenticated
 	return (
 		<div className="h-screen overflow-hidden bg-gray-100">
@@ -58,18 +74,26 @@ function AppContent() {
 						setSelectedCategory={setSelectedCategory}
 						onLogout={logout}
 						userData={userData}
+						onEditQuestions={handleEditQuestions}
 					/>
-					<div className="flex-1 flex flex-col pl-8 pr-2  ml-18">
+					<div className="flex-1 flex flex-col pl-8 pr-2 ml-18">
 						<div className="mb-2">
 							<AppHeader />
 						</div>
 						<main className="flex-1 overflow-hidden pb-4">
-							<QuestionsComponent
-								selectedCategory={selectedCategory}
-								onPreviousCategory={handlePreviousCategory}
-								onNextCategory={handleNextCategory}
-								categories={categories}
-							/>
+							{isEditingQuestions ? (
+								<EditQuestionsComponent 
+									onClose={handleCloseEdit}
+									onSave={handleSaveQuestions}
+								/>
+							) : (
+								<QuestionsComponent
+									selectedCategory={selectedCategory}
+									onPreviousCategory={handlePreviousCategory}
+									onNextCategory={handleNextCategory}
+									categories={categories}
+								/>
+							)}
 						</main>
 					</div>
 				</div>
@@ -80,11 +104,9 @@ function AppContent() {
 
 function App() {
 	return (
-		<Router>
-			<AuthProvider>
-				<AppContent />
-			</AuthProvider>
-		</Router>
+		<AuthProvider>
+			<AppContent />
+		</AuthProvider>
 	)
 }
 
