@@ -23,13 +23,11 @@ export default function LoginComponent({ error: propError }: LoginProps) {
         </div>
 
         <div className="space-y-6">
-          <p className="text-center text-gray-700">
-            Zaloguj się, aby uzyskać dostęp do systemu oceny pracowników.
-          </p>
+         
           
           <Button
             onClick={login}
-            className="w-full bg-ubbprimary hover:bg-ubbprimary/90"
+            className="w-full bg-ubbprimary hover:bg-ubbprimary/90 cursor-pointer"
             disabled={isLoading}
           >
             {isLoading ? 'Ładowanie...' : 'Zaloguj się przez Keycloak'}
