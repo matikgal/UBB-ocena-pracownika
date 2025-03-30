@@ -26,8 +26,8 @@ export function QuestionItem({
   onValueChange 
 }: QuestionItemProps) {
   return (
-    <div className={`bg-white p-4 rounded-lg shadow-sm mb-4 text-black ${checked ? 'border-l-4 border-green-500' : ''}`}>
-      <div className="flex items-start gap-3">
+    <div className={`bg-white p-4 rounded-lg shadow border-2 ${checked ? 'border-green-500 bg-green-50' : 'border-gray-200'} transition-all`}>
+      <div className="flex items-start gap-4">
         <Checkbox 
           id={`question-${question.id}`} 
           checked={checked}
@@ -39,7 +39,7 @@ export function QuestionItem({
           <div className="flex items-start justify-between">
             <label 
               htmlFor={`question-${question.id}`}
-              className={`text-sm font-medium leading-tight cursor-pointer ${checked ? 'text-green-700' : ''}`}
+              className={`text-sm font-medium leading-tight cursor-pointer transition-colors ${checked ? 'text-green-700' : 'text-gray-800'}`}
             >
               {question.title}
             </label>
@@ -65,13 +65,17 @@ function QuestionTooltip({ tooltip }: { tooltip: string[] }) {
   return (
     <TooltipProvider>
       <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="p-1 cursor-help">
-            <GoInfo className="text-gray-400 hover:text-gray-600" />
-          </div>
+        <TooltipTrigger className="inline-flex cursor-help">
+          <GoInfo className="text-gray-400 hover:text-gray-600 transition-colors" />
         </TooltipTrigger>
-        <TooltipContent className="max-w-xs">
-          <ul className="list-disc pl-4 text-xs">
+        <TooltipContent 
+          side="left" 
+          align="start" 
+          className="max-w-[200px] bg-white shadow-lg p-3 rounded-md z-50 border border-gray-200"
+          sideOffset={5}
+          hideArrow
+        >
+          <ul className="list-disc pl-4 text-xs space-y-1.5 text-gray-800">
             {tooltip.map((tip, index) => (
               <li key={index}>{tip}</li>
             ))}
@@ -94,23 +98,23 @@ function QuestionPoints({
   onValueChange: (value: string) => void 
 }) {
   return (
-    <div className="mt-2 flex items-center text-black">
-      <span className="text-sm mr-2">
+    <div className="mt-3 flex items-center">
+      <span className="text-sm text-gray-600 mr-3 font-medium">
         {typeof points === 'number' 
           ? `${points} pkt` 
           : points}
       </span>
       
       {checked && (
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
           <Input
             type="number"
             value={value}
             onChange={(e) => onValueChange(e.target.value)}
-            className="w-20 h-8 text-sm"
+            className="w-20 h-8 text-sm text-black rounded-md border-gray-200 focus:border-green-500 focus:ring-1 focus:ring-green-500"
             placeholder="Punkty"
           />
-          <span className="ml-2 text-sm text-green-600">
+          <span className="text-sm font-medium text-green-600">
             Wybrano
           </span>
         </div>

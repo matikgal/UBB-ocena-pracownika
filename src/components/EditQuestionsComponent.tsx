@@ -137,15 +137,18 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 	// Wyświetlanie stanu ładowania, gdy nie ma jeszcze pytań
 	if (loading && questions.length === 0) {
 		return (
-			<div className="h-full p-4 lg:p-6 bg-white rounded-lg shadow-lg flex flex-col mx-2 my-2 overflow-auto text-black">
+			<div className="h-full p-6 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col mx-2 my-2 overflow-auto">
 				<div className="flex justify-between items-center mb-6">
-					<h2 className="text-2xl font-bold text-ubbprimary">Edycja pytań</h2>
-					<Button variant="outline" size="icon" onClick={onClose}>
-						<X className="h-4 w-4" />
+					<h2 className="text-2xl font-semibold text-gray-800">Edycja pytań</h2>
+					<Button variant="ghost" size="icon" onClick={onClose} className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
+						<X className="h-5 w-5" />
 					</Button>
 				</div>
 				<div className="flex items-center justify-center h-full">
-					<p>Ładowanie pytań...</p>
+					<div className="text-gray-500 flex flex-col items-center">
+						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 mb-2"></div>
+						<span>Ładowanie pytań...</span>
+					</div>
 				</div>
 			</div>
 		)
@@ -153,25 +156,25 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 
 	// Główny widok komponentu
 	return (
-		<div className="h-full p-4 lg:p-6 bg-white rounded-lg shadow-lg flex flex-col mx-2 my-2 overflow-auto text-black">
+		<div className="h-full p-6 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col mx-2 my-2 text-gray-800">
 			<div className="flex justify-between items-center mb-6">
-				<h2 className="text-2xl font-bold text-ubbprimary">Edycja pytań</h2>
-				<Button variant="outline" size="icon" onClick={onClose}>
-					<X className="h-4 w-4" />
+				<h2 className="text-2xl font-semibold text-gray-800">Edycja pytań</h2>
+				<Button variant="ghost" size="icon" onClick={onClose} className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
+					<X className="h-5 w-5" />
 				</Button>
 			</div>
 
 			{error && (
-				<div className={`mb-4 p-3 ${error.includes('Dodano') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} rounded-md`}>
+				<div className={`mb-4 p-3 rounded-md ${error.includes('Dodano') ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
 					{error}
 				</div>
 			)}
 
 			{/* Wybór kategorii pytań */}
 			<div className="mb-6">
-				<label className="block text-sm font-medium mb-2">Wybierz kategorię</label>
+				<label className="block text-sm font-medium text-gray-700 mb-2">Wybierz kategorię</label>
 				<select
-					className="w-full p-2 border rounded-md"
+					className="w-full p-2 border border-gray-200 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-700"
 					value={selectedCategory}
 					onChange={e => handleCategoryChange(e.target.value)}>
 					{categories.map(category => (
@@ -182,82 +185,92 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 				</select>
 			</div>
 
-			{/* Przycisk do dodania wszystkich pytań z pliku */}
-			<div className="mb-4">
-				<Button 
-					onClick={() => addAllQuestionsFromFile(selectedCategory)} 
-					disabled={loading}
-					className="w-full bg-blue-600 hover:bg-blue-700"
-				>
-					<Database className="h-4 w-4 mr-2" /> 
-					{loading ? 'Dodawanie pytań...' : 'Dodaj wszystkie pytania z pliku'}
-				</Button>
-			</div>
+			<h3 className="text-lg font-semibold mb-4 text-gray-700">Pytania w kategorii: {selectedCategory}</h3>
 
-			<div className="mb-8">
-				<h3 className="text-lg font-semibold mb-4">Pytania w kategorii: {selectedCategory}</h3>
-
-				{/* Lista istniejących pytań */}
+			{/* Scrollable container for questions */}
+			<div className="flex-1 overflow-y-auto mb-4 pr-1">
 				<div className="space-y-4 mb-8">
 					{questions.map(question => (
-						<div key={question.id} className="p-4 border rounded-lg">
+						<div key={question.id} className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors">
 							{editingQuestion?.id === question.id ? (
 								// Formularz edycji pytania
 								<div className="space-y-3">
 									<div>
-										<label className="block text-sm font-medium mb-1">Tytuł pytania</label>
+										<label className="block text-sm font-medium text-gray-700 mb-1">Tytuł pytania</label>
 										<Input
 											value={editingQuestion.title}
 											onChange={e => setEditingQuestion({ ...editingQuestion, title: e.target.value })}
+											className="border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
 										/>
 									</div>
 									<div>
-										<label className="block text-sm font-medium mb-1">Punkty</label>
+										<label className="block text-sm font-medium text-gray-700 mb-1">Punkty</label>
 										<Input
 											type="number"
 											value={typeof editingQuestion.points === 'string' ? 0 : editingQuestion.points}
 											onChange={e => setEditingQuestion({ ...editingQuestion, points: Number(e.target.value) })}
+											className="border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 w-32"
 										/>
 									</div>
 									<div>
-										<label className="block text-sm font-medium mb-1">Podpowiedzi</label>
+										<label className="block text-sm font-medium text-gray-700 mb-1">Podpowiedzi</label>
 										{editingQuestion.tooltip.map((tip, index) => (
 											<div key={index} className="flex items-center gap-2 mb-2">
 												<Textarea
 													value={tip}
 													onChange={e => handleTooltipChange(index, e.target.value, true)}
-													className="flex-1"
+													className="flex-1 border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
 												/>
 												<Button
-													variant="outline"
+													variant="ghost"
 													size="icon"
 													onClick={() => handleRemoveTooltip(index, true)}
-													disabled={editingQuestion.tooltip.length <= 1}>
+													disabled={editingQuestion.tooltip.length <= 1}
+													className="text-gray-400 hover:text-red-500 hover:bg-red-50">
 													<Trash className="h-4 w-4" />
 												</Button>
 											</div>
 										))}
-										<Button variant="outline" size="sm" onClick={handleAddTooltip} className="mt-2">
+										<Button 
+											variant="outline" 
+											size="sm" 
+											onClick={handleAddTooltip} 
+											className="mt-2 text-blue-600 border-blue-200 hover:bg-blue-50">
 											<Plus className="h-4 w-4 mr-2" /> Dodaj podpowiedź
 										</Button>
 									</div>
 									<div className="flex justify-end gap-2 mt-4">
-										<Button variant="outline" onClick={() => setEditingQuestion(null)}>
+										<Button 
+											variant="outline" 
+											onClick={() => setEditingQuestion(null)}
+											className="border-gray-200 hover:bg-gray-50 text-gray-700">
 											Anuluj
 										</Button>
-										<Button onClick={handleUpdateQuestion}>Zapisz zmiany</Button>
+										<Button 
+											onClick={handleUpdateQuestion}
+											className="bg-blue-600 hover:bg-blue-700 text-white">
+											Zapisz zmiany
+										</Button>
 									</div>
 								</div>
 							) : (
 								// Widok pytania (bez edycji)
 								<div>
 									<div className="flex justify-between">
-										<h4 className="font-medium">{question.title}</h4>
+										<h4 className="font-medium text-gray-800">{question.title}</h4>
 										<div className="flex gap-2">
-											<Button variant="outline" size="sm" onClick={() => setEditingQuestion(question)}>
+											<Button 
+												variant="outline" 
+												size="sm" 
+												onClick={() => setEditingQuestion(question)}
+												className="border-gray-200 hover:bg-gray-50 text-gray-700">
 												Edytuj
 											</Button>
-											<Button variant="destructive" size="sm" onClick={() => deleteExistingQuestion(question.id)}>
+											<Button 
+												variant="outline" 
+												size="sm" 
+												onClick={() => deleteExistingQuestion(question.id)}
+												className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700">
 												Usuń
 											</Button>
 										</div>
@@ -265,8 +278,8 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 									<p className="text-sm text-gray-500 mt-1">Punkty: {question.points}</p>
 									{question.tooltip.length > 0 && (
 										<div className="mt-2">
-											<p className="text-sm font-medium">Podpowiedzi:</p>
-											<ul className="list-disc pl-5 text-sm text-gray-600">
+											<p className="text-sm font-medium text-gray-700">Podpowiedzi:</p>
+											<ul className="list-disc pl-5 text-sm text-gray-600 mt-1">
 												{question.tooltip.map((tip, index) => (
 													<li key={index}>{tip}</li>
 												))}
@@ -280,50 +293,60 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 				</div>
 
 				{/* Formularz dodawania nowego pytania */}
-				<div className="border-t pt-6">
-					<h3 className="text-lg font-semibold mb-4">Dodaj nowe pytanie</h3>
+				<div className="border-t border-gray-100 pt-6">
+					<h3 className="text-lg font-semibold mb-4 text-gray-700">Dodaj nowe pytanie</h3>
 					<div className="space-y-3">
 						<div>
-							<label className="block text-sm font-medium mb-1">Tytuł pytania</label>
+							<label className="block text-sm font-medium text-gray-700 mb-1">Tytuł pytania</label>
 							<Input
 								value={newQuestion.title}
 								onChange={e => setNewQuestion({ ...newQuestion, title: e.target.value })}
 								placeholder="Wprowadź tytuł pytania"
+								className="border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
 							/>
 						</div>
 						<div>
-							<label className="block text-sm font-medium mb-1">Punkty</label>
+							<label className="block text-sm font-medium text-gray-700 mb-1">Punkty</label>
 							<Input
 								type="number"
 								value={typeof newQuestion.points === 'string' ? 0 : newQuestion.points}
 								onChange={e => setNewQuestion({ ...newQuestion, points: Number(e.target.value) })}
 								placeholder="Wprowadź liczbę punktów"
+								className="border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 w-32"
 							/>
 						</div>
 						<div>
-							<label className="block text-sm font-medium mb-1">Podpowiedzi</label>
+							<label className="block text-sm font-medium text-gray-700 mb-1">Podpowiedzi</label>
 							{newQuestion.tooltip.map((tip, index) => (
 								<div key={index} className="flex items-center gap-2 mb-2">
 									<Textarea
 										value={tip}
 										onChange={e => handleTooltipChange(index, e.target.value, false)}
 										placeholder="Wprowadź tekst podpowiedzi"
-										className="flex-1"
+										className="flex-1 border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
 									/>
 									<Button
-										variant="outline"
+										variant="ghost"
 										size="icon"
 										onClick={() => handleRemoveTooltip(index, false)}
-										disabled={newQuestion.tooltip.length <= 1}>
+										disabled={newQuestion.tooltip.length <= 1}
+										className="text-gray-400 hover:text-red-500 hover:bg-red-50">
 										<Trash className="h-4 w-4" />
 									</Button>
 								</div>
 							))}
-							<Button variant="outline" size="sm" onClick={handleAddTooltip} className="mt-2">
+							<Button 
+								variant="outline" 
+								size="sm" 
+								onClick={handleAddTooltip} 
+								className="mt-2 text-blue-600 border-blue-200 hover:bg-blue-50">
 								<Plus className="h-4 w-4 mr-2" /> Dodaj podpowiedź
 							</Button>
 						</div>
-						<Button onClick={handleAddQuestion} disabled={!newQuestion.title.trim()} className="mt-4">
+						<Button 
+							onClick={handleAddQuestion} 
+							disabled={!newQuestion.title.trim()} 
+							className="mt-4 bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-200">
 							<Plus className="h-4 w-4 mr-2" /> Dodaj pytanie
 						</Button>
 					</div>
@@ -331,11 +354,24 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 			</div>
 
 			{/* Przyciski akcji na dole komponentu */}
-			<div className="flex justify-end gap-4 mt-8 border-t pt-4">
-				<Button variant="outline" onClick={onClose}>
+			<div className="flex justify-end gap-4 mt-4 border-t border-gray-100 pt-4">
+				<Button 
+					onClick={() => addAllQuestionsFromFile(selectedCategory)} 
+					disabled={loading}
+					className="mr-auto bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-200"
+				>
+					<Database className="h-4 w-4 mr-2" /> 
+					{loading ? 'Dodawanie pytań...' : 'Dodaj wszystkie pytania z pliku'}
+				</Button>
+				<Button 
+					variant="outline" 
+					onClick={onClose}
+					className="border-gray-200 hover:bg-gray-50 text-gray-700">
 					Anuluj
 				</Button>
-				<Button onClick={handleSaveChanges}>
+				<Button 
+					onClick={handleSaveChanges}
+					className="bg-green-600 hover:bg-green-700 text-white transition-colors duration-200">
 					<Save className="h-4 w-4 mr-2" /> Zapisz wszystkie zmiany
 				</Button>
 			</div>
