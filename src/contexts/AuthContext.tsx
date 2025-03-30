@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import keycloak from '../lib/keycloak';
 import initKeycloak from '../lib/keycloak';
+import { db } from '../../firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -35,17 +37,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         setIsAuthenticated(keycloak.authenticated ?? false);
         
-        // In the AuthProvider component, update the userData extraction:
-        
         if (keycloak.authenticated) {
           setToken(keycloak.token);
-          setUserData({
+          
+          // Extract user data from Keycloak token
+          const userData = {
             name: keycloak.tokenParsed?.name || keycloak.tokenParsed?.given_name || '',
             lastName: keycloak.tokenParsed?.family_name || '',
             email: keycloak.tokenParsed?.email || '',
             username: keycloak.tokenParsed?.preferred_username || '',
             // Include any other fields you need
-          });
+          };
+          
+          setUserData(userData);
+          
+          // Save user data to Firestore if they don't exist yet
+          await saveUserToFirestore(userData);
           
           // Set up token refresh
           keycloak.onTokenExpired = () => {
@@ -58,6 +65,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setError('Nie można połączyć się z serwerem uwierzytelniania. Sprawdź konfigurację Keycloak.');
       } finally {
         setIsLoading(false);
+      }
+    };
+    
+    // Add this new function to save user data to Firestore
+    const saveUserToFirestore = async (userData: any) => {
+      try {
+        // Use email as document ID since it's unique for each user
+        const userEmail = userData.email;
+        if (!userEmail) {
+          console.error('No email found in user data');
+          return;
+        }
+        
+        // Check if user already exists in Firestore
+        const userDocRef = doc(db, 'Users', userEmail);
+        const userDoc = await getDoc(userDocRef);
+        
+        // Only create/update if user doesn't exist
+        if (!userDoc.exists()) {
+          await setDoc(userDocRef, {
+            ...userData,
+            createdAt: new Date(),
+            lastLogin: new Date()
+          });
+          console.log('User added to Firestore');
+        } else {
+          // Optionally update lastLogin time
+          await setDoc(userDocRef, {
+            lastLogin: new Date()
+          }, { merge: true });
+          console.log('User already exists, updated lastLogin');
+        }
+      } catch (error) {
+        console.error('Error saving user to Firestore:', error);
       }
     };
     

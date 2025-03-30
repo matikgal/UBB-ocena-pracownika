@@ -2,14 +2,8 @@ import { useState } from 'react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
-import { Plus, Trash, Save, X } from 'lucide-react'
-import {
-	publikacjeDydaktyczne,
-	podniesienieJakosciNauczania,
-	zajeciaJezykObcy,
-	funkcjeDydaktyczne,
-	nagrodyWyroznienia,
-} from '../lib/questions'
+import { Plus, Trash, Save, X, Database } from 'lucide-react'
+import { useQuestionsManager } from '../hooks/useQuestionsManager'
 
 interface Question {
 	id: string
@@ -24,17 +18,15 @@ interface EditQuestionsComponentProps {
 }
 
 export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsComponentProps) {
-	// Combine all question categories
-	const allCategories = {
-		'Publikacje dydaktyczne': publikacjeDydaktyczne,
-		'Podniesienie jakości nauczania': podniesienieJakosciNauczania,
-		'Zajęcia w języku obcym, wykłady za granicą': zajeciaJezykObcy,
-		'Pełnienie funkcji dydaktycznej (za każdy rok)': funkcjeDydaktyczne,
-		'Nagrody i wyróznienia': nagrodyWyroznienia,
-	}
+	const categories = [
+		'Publikacje dydaktyczne',
+		'Podniesienie jakości nauczania',
+		'Zajęcia w języku obcym, wykłady za granicą',
+		'Pełnienie funkcji dydaktycznej (za każdy rok)',
+		'Nagrody i wyróznienia',
+	]
 
-	const [selectedCategory, setSelectedCategory] = useState<string>(Object.keys(allCategories)[0])
-	const [questions, setQuestions] = useState<Record<string, Question[]>>(allCategories)
+	const [selectedCategory, setSelectedCategory] = useState<string>(categories[0])
 	const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
 	const [newQuestion, setNewQuestion] = useState<Question>({
 		id: '',
@@ -43,19 +35,37 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 		tooltip: [''],
 	})
 
+	// Use the custom hook for all data operations
+	const {
+		questions,
+		loading,
+		error,
+		fetchQuestions,
+		addNewQuestion,
+		updateExistingQuestion,
+		deleteExistingQuestion,
+		addAllQuestionsFromFile
+	} = useQuestionsManager(selectedCategory)
+
+	// Handle category change
+	const handleCategoryChange = (category: string) => {
+		setSelectedCategory(category)
+		fetchQuestions(category)
+	}
+
+	// Obsługa zapisywania wszystkich zmian
 	const handleSaveChanges = () => {
 		onSave(questions)
 		onClose()
 	}
 
-	const handleAddQuestion = () => {
+	// Obsługa dodawania nowego pytania
+	const handleAddQuestion = async () => {
 		if (newQuestion.title.trim() === '') return
 
-		const updatedQuestions = { ...questions }
-		const newId = `q${Date.now()}`
-		updatedQuestions[selectedCategory] = [...updatedQuestions[selectedCategory], { ...newQuestion, id: newId }]
-
-		setQuestions(updatedQuestions)
+		await addNewQuestion(newQuestion, selectedCategory)
+		
+		// Resetowanie formularza
 		setNewQuestion({
 			id: '',
 			title: '',
@@ -64,24 +74,14 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 		})
 	}
 
-	const handleDeleteQuestion = (id: string) => {
-		const updatedQuestions = { ...questions }
-		updatedQuestions[selectedCategory] = updatedQuestions[selectedCategory].filter(q => q.id !== id)
-		setQuestions(updatedQuestions)
-	}
-
-	const handleUpdateQuestion = () => {
+	// Obsługa aktualizacji pytania
+	const handleUpdateQuestion = async () => {
 		if (!editingQuestion) return
-
-		const updatedQuestions = { ...questions }
-		updatedQuestions[selectedCategory] = updatedQuestions[selectedCategory].map(q =>
-			q.id === editingQuestion.id ? editingQuestion : q
-		)
-
-		setQuestions(updatedQuestions)
+		await updateExistingQuestion(editingQuestion)
 		setEditingQuestion(null)
 	}
 
+	// Obsługa dodawania nowej podpowiedzi do pytania
 	const handleAddTooltip = () => {
 		if (editingQuestion) {
 			setEditingQuestion({
@@ -96,6 +96,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 		}
 	}
 
+	// Obsługa zmiany treści podpowiedzi
 	const handleTooltipChange = (index: number, value: string, isEditing: boolean) => {
 		if (isEditing && editingQuestion) {
 			const updatedTooltips = [...editingQuestion.tooltip]
@@ -114,6 +115,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 		}
 	}
 
+	// Obsługa usuwania podpowiedzi
 	const handleRemoveTooltip = (index: number, isEditing: boolean) => {
 		if (isEditing && editingQuestion) {
 			const updatedTooltips = [...editingQuestion.tooltip]
@@ -132,6 +134,24 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 		}
 	}
 
+	// Wyświetlanie stanu ładowania, gdy nie ma jeszcze pytań
+	if (loading && questions.length === 0) {
+		return (
+			<div className="h-full p-4 lg:p-6 bg-white rounded-lg shadow-lg flex flex-col mx-2 my-2 overflow-auto text-black">
+				<div className="flex justify-between items-center mb-6">
+					<h2 className="text-2xl font-bold text-ubbprimary">Edycja pytań</h2>
+					<Button variant="outline" size="icon" onClick={onClose}>
+						<X className="h-4 w-4" />
+					</Button>
+				</div>
+				<div className="flex items-center justify-center h-full">
+					<p>Ładowanie pytań...</p>
+				</div>
+			</div>
+		)
+	}
+
+	// Główny widok komponentu
 	return (
 		<div className="h-full p-4 lg:p-6 bg-white rounded-lg shadow-lg flex flex-col mx-2 my-2 overflow-auto text-black">
 			<div className="flex justify-between items-center mb-6">
@@ -141,13 +161,20 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 				</Button>
 			</div>
 
+			{error && (
+				<div className={`mb-4 p-3 ${error.includes('Dodano') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} rounded-md`}>
+					{error}
+				</div>
+			)}
+
+			{/* Wybór kategorii pytań */}
 			<div className="mb-6">
 				<label className="block text-sm font-medium mb-2">Wybierz kategorię</label>
 				<select
 					className="w-full p-2 border rounded-md"
 					value={selectedCategory}
-					onChange={e => setSelectedCategory(e.target.value)}>
-					{Object.keys(allCategories).map(category => (
+					onChange={e => handleCategoryChange(e.target.value)}>
+					{categories.map(category => (
 						<option key={category} value={category}>
 							{category}
 						</option>
@@ -155,13 +182,27 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 				</select>
 			</div>
 
+			{/* Przycisk do dodania wszystkich pytań z pliku */}
+			<div className="mb-4">
+				<Button 
+					onClick={() => addAllQuestionsFromFile(selectedCategory)} 
+					disabled={loading}
+					className="w-full bg-blue-600 hover:bg-blue-700"
+				>
+					<Database className="h-4 w-4 mr-2" /> 
+					{loading ? 'Dodawanie pytań...' : 'Dodaj wszystkie pytania z pliku'}
+				</Button>
+			</div>
+
 			<div className="mb-8">
 				<h3 className="text-lg font-semibold mb-4">Pytania w kategorii: {selectedCategory}</h3>
 
+				{/* Lista istniejących pytań */}
 				<div className="space-y-4 mb-8">
-					{questions[selectedCategory].map(question => (
+					{questions.map(question => (
 						<div key={question.id} className="p-4 border rounded-lg">
 							{editingQuestion?.id === question.id ? (
+								// Formularz edycji pytania
 								<div className="space-y-3">
 									<div>
 										<label className="block text-sm font-medium mb-1">Tytuł pytania</label>
@@ -208,6 +249,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 									</div>
 								</div>
 							) : (
+								// Widok pytania (bez edycji)
 								<div>
 									<div className="flex justify-between">
 										<h4 className="font-medium">{question.title}</h4>
@@ -215,7 +257,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 											<Button variant="outline" size="sm" onClick={() => setEditingQuestion(question)}>
 												Edytuj
 											</Button>
-											<Button variant="destructive" size="sm" onClick={() => handleDeleteQuestion(question.id)}>
+											<Button variant="destructive" size="sm" onClick={() => deleteExistingQuestion(question.id)}>
 												Usuń
 											</Button>
 										</div>
@@ -237,6 +279,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 					))}
 				</div>
 
+				{/* Formularz dodawania nowego pytania */}
 				<div className="border-t pt-6">
 					<h3 className="text-lg font-semibold mb-4">Dodaj nowe pytanie</h3>
 					<div className="space-y-3">
@@ -287,6 +330,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 				</div>
 			</div>
 
+			{/* Przyciski akcji na dole komponentu */}
 			<div className="flex justify-end gap-4 mt-8 border-t pt-4">
 				<Button variant="outline" onClick={onClose}>
 					Anuluj
