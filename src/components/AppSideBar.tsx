@@ -114,6 +114,7 @@ export function AppSidebar({
 															}`}
 															onClick={() => {
 																setSelectedCategory(category.title)
+																console.log('Selected category for Firebase query:', category.title)
 																setIsOpen(false)
 															}}>
 															<div className="flex items-center space-x-3">
