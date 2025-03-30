@@ -38,44 +38,43 @@ export default function QuestionsComponent({
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 	const [successMessage, setSuccessMessage] = useState<string | null>(null)
-
-	// Add user responses hook
-	const { saveResponse, loadResponses, responses } = useUserResponses()
-	const { userData } = useAuth()
-
-	// Use a ref to track if we've already loaded data for this category
-	const dataLoadedRef = useRef<Record<string, boolean>>({})
-
-	// Make sure responses are loaded when component mounts or category changes
-	useEffect(() => {
-		// Prevent duplicate data loading for the same category
-		if (dataLoadedRef.current[selectedCategory]) {
-			return
-		}
-
-		const loadData = async () => {
-			setLoading(true)
-			try {
-				dataLoadedRef.current[selectedCategory] = true
-
-				if (userData?.email) {
-					// Load responses first
-					await loadResponses(selectedCategory)
-				}
-				// Then fetch questions
-				await fetchQuestions()
-			} catch (err) {
-				console.error('Error loading data:', err)
-				setError('Nie udało się załadować danych')
-				// Reset the loading flag on error
-				dataLoadedRef.current[selectedCategory] = false
-			} finally {
-				setLoading(false)
-			}
-		}
-
-		loadData()
-	}, [selectedCategory, userData?.email])
+  
+  // Add user responses hook
+  const { saveResponse, loadResponses, responses } = useUserResponses()
+  const { userData } = useAuth()
+  
+  // Use a ref to track if we've already loaded data for this category
+  const dataLoadedRef = useRef<Record<string, boolean>>({});
+  
+  // Make sure responses are loaded when component mounts or category changes
+  useEffect(() => {
+    // Always reset questions when category changes
+    setQuestions([]);
+    
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        // Mark this category as loaded
+        dataLoadedRef.current[selectedCategory] = true;
+        
+        if (userData?.email) {
+          // Load responses first
+          await loadResponses(selectedCategory);
+        }
+        // Then fetch questions
+        await fetchQuestions();
+      } catch (err) {
+        console.error('Error loading data:', err);
+        setError('Nie udało się załadować danych');
+        // Reset the loading flag on error
+        dataLoadedRef.current[selectedCategory] = false;
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+  }, [selectedCategory, userData?.email]);
 
 	const fetchQuestions = async () => {
 		try {

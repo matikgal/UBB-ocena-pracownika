@@ -26,13 +26,32 @@ export function QuestionItem({
   onValueChange 
 }: QuestionItemProps) {
   return (
-    <div className={`bg-white p-4 rounded-lg shadow border-2 ${checked ? 'border-green-500 bg-green-50' : 'border-gray-200'} transition-all`}>
-      <div className="flex items-start gap-4">
+    <div 
+      className={`bg-white p-4 rounded-lg shadow border-2 ${checked ? 'border-green-500 bg-green-50' : 'border-gray-200'} transition-all cursor-pointer`}
+      onClick={(e) => {
+        // Prevent triggering if clicking on input or tooltip
+        if (
+          e.target instanceof HTMLInputElement || 
+          (e.target instanceof Element && (
+            e.target.closest('.cursor-help') || 
+            e.target.closest('input')
+          ))
+        ) {
+          return;
+        }
+        onCheckChange();
+      }}
+    >
+      <div className="flex items-start gap-4 ">
         <Checkbox 
           id={`question-${question.id}`} 
           checked={checked}
-          onCheckedChange={onCheckChange}
-          className="mt-1"
+          onCheckedChange={() => onCheckChange()}
+          className="mt-1 cursor-pointer"
+          onClick={(e) => {
+            // Stop propagation to prevent the parent div handler from firing
+            e.stopPropagation();
+          }}
         />
         
         <div className="flex-1">
@@ -73,7 +92,7 @@ function QuestionTooltip({ tooltip }: { tooltip: string[] }) {
           align="start" 
           className="max-w-[200px] bg-white shadow-lg p-3 rounded-md z-50 border border-gray-200"
           sideOffset={5}
-          hideArrow
+         
         >
           <ul className="list-disc pl-4 text-xs space-y-1.5 text-gray-800">
             {tooltip.map((tip, index) => (
@@ -114,9 +133,7 @@ function QuestionPoints({
             className="w-20 h-8 text-sm text-black rounded-md border-gray-200 focus:border-green-500 focus:ring-1 focus:ring-green-500"
             placeholder="Punkty"
           />
-          <span className="text-sm font-medium text-green-600">
-            Wybrano
-          </span>
+         
         </div>
       )}
     </div>
