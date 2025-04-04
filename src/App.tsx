@@ -7,13 +7,17 @@ import LoginComponent from './components/auth/LoginComponent'  // Updated import
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { EditQuestionsComponent } from './components/EditQuestionsComponent'
 import { UserManagementComponent } from './components/users/UserManagementComponent'
+import LibraryEvaluationComponent from './components/library/LibraryEvaluationComponent'
 
 function AppContent() {
 	const [selectedCategory, setSelectedCategory] = useState<string>('Publikacje dydaktyczne')
 	const [isEditingQuestions, setIsEditingQuestions] = useState<boolean>(false)
 	const [isManagingUsers, setIsManagingUsers] = useState<boolean>(false)
+	const [isManagingLibrary, setIsManagingLibrary] = useState<boolean>(false)
 	const { isAuthenticated, isLoading, logout, userData, hasRole } = useAuth()
 	const canEditQuestions = hasRole('admin') || hasRole('dziekan')
+	// Update this line to match the role name in the database
+	const canManageLibrary = hasRole('admin') || hasRole('library') || hasRole('biblioteka')
 
 	// Define categories array to match the sidebar categories
 	const categories = [
@@ -58,6 +62,7 @@ function AppContent() {
 		if (canEditQuestions) {
 			setIsEditingQuestions(true)
 			setIsManagingUsers(false)
+			setIsManagingLibrary(false)
 		}
 	}
 
@@ -66,6 +71,20 @@ function AppContent() {
 		if (canEditQuestions) {
 			setIsManagingUsers(true)
 			setIsEditingQuestions(false)
+			setIsManagingLibrary(false)
+		}
+	}
+
+	const handleManageLibrary = () => {
+		// Only allow users with appropriate roles to manage library evaluations
+		// Update this condition to match the role check above
+		if (canManageLibrary) {
+			console.log('Setting isManagingLibrary to true');
+			setIsManagingLibrary(true)
+			setIsManagingUsers(false)
+			setIsEditingQuestions(false)
+		} else {
+			console.log('User does not have library access');
 		}
 	}
 
@@ -75,6 +94,10 @@ function AppContent() {
 
 	const handleCloseUserManagement = () => {
 		setIsManagingUsers(false)
+	}
+
+	const handleCloseLibraryManagement = () => {
+		setIsManagingLibrary(false)
 	}
 
 	const handleSaveQuestions = (updatedQuestions: any) => {
@@ -95,6 +118,7 @@ function AppContent() {
 						userData={userData}
 						onEditQuestions={handleEditQuestions}
 						onManageUsers={handleManageUsers}
+						onManageLibrary={handleManageLibrary}
 					/>
 					<div className="flex-1 flex flex-col pl-8 pr-2 ml-18">
 						<div className="mb-2">
@@ -110,6 +134,8 @@ function AppContent() {
 								<UserManagementComponent 
 									onClose={handleCloseUserManagement}
 								/>
+							) : isManagingLibrary ? (
+								<LibraryEvaluationComponent />
 							) : (
 								<QuestionsComponent
 									selectedCategory={selectedCategory}

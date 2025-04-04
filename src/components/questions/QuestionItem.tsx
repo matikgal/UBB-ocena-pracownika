@@ -2,7 +2,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/
 import { GoInfo } from 'react-icons/go'
 import { Checkbox } from '../ui/checkbox'
 import { Input } from '../ui/input'
-import { Trash } from 'lucide-react'
+import { Trash, BookOpen } from 'lucide-react'
 import { Button } from '../ui/button'
 
 interface Question {
@@ -10,7 +10,8 @@ interface Question {
   title: string
   points: number | string
   tooltip: string[]
-  status?: 'pending' | 'approved' | 'rejected' // Add status field
+  status?: 'pending' | 'approved' | 'rejected'
+  isLibraryEvaluated?: boolean // New field to identify library-evaluated questions
 }
 
 interface QuestionItemProps {
@@ -36,7 +37,6 @@ export function QuestionItem({
   const getBorderAndBgColor = () => {
     if (!checked) return 'border-gray-200 bg-white';
     
-    // If checked and has status, use status-based colors
     if (question.status) {
       switch (question.status) {
         case 'approved':
@@ -48,12 +48,15 @@ export function QuestionItem({
       }
     }
     
-    // Default for checked items without status (or with unknown status)
     return 'border-blue-500 bg-blue-50';
   };
 
   // Determine if editing is disabled (when approved)
   const isEditingDisabled = question.status === 'approved';
+  
+  // Check if this is the library-evaluated question
+  const isLibraryQuestion = question.isLibraryEvaluated || 
+    question.title === "Autorstwo artykułu/monografii (dotyczy pracowników dydaktycznych)";
 
   return (
     <div 
@@ -77,7 +80,7 @@ export function QuestionItem({
       <div className="flex items-start gap-4 ">
         <Checkbox 
           id={`question-${question.id}`} 
-          checked={checked}
+          checked={question.status === 'approved' ? true : checked}
           onCheckedChange={() => !isEditingDisabled && onCheckChange()}
           className="mt-1 cursor-pointer"
           disabled={isEditingDisabled}
@@ -98,10 +101,22 @@ export function QuestionItem({
               }`}
             >
               {question.title}
+              {isLibraryQuestion && (
+                <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                  Oceniane przez bibliotekę
+                </span>
+              )}
             </label>
             
             <div className="flex items-center gap-2">
               <QuestionTooltip tooltip={question.tooltip} />
+              
+              {/* Library icon for library-evaluated questions */}
+              {isLibraryQuestion && (
+                <span className="text-blue-500">
+                  <BookOpen className="h-4 w-4" />
+                </span>
+              )}
               
               {/* Status indicator */}
               {question.status && (
@@ -138,6 +153,7 @@ export function QuestionItem({
             value={value} 
             onValueChange={onValueChange}
             disabled={isEditingDisabled}
+            isLibraryEvaluated={isLibraryQuestion}
           />
         </div>
       </div>
@@ -177,13 +193,15 @@ function QuestionPoints({
   checked, 
   value, 
   onValueChange,
-  disabled = false
+  disabled = false,
+  isLibraryEvaluated = false
 }: { 
   points: number | string, 
   checked: boolean, 
   value: string, 
   onValueChange: (value: string) => void,
-  disabled?: boolean
+  disabled?: boolean,
+  isLibraryEvaluated?: boolean
 }) {
   return (
     <div className="mt-3 flex items-center">
@@ -195,17 +213,25 @@ function QuestionPoints({
       
       {checked && (
         <div className="flex items-center gap-2">
-          <Input
-            type="number"
-            value={value}
-            onChange={(e) => onValueChange(e.target.value)}
-            className={`w-20 h-8 text-sm text-black rounded-md border-gray-200 
-              ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'focus:border-green-500 focus:ring-1 focus:ring-green-500'}`}
-            placeholder="Punkty"
-            min={0}
-            step={0.5}
-            disabled={disabled}
-          />
+          {isLibraryEvaluated ? (
+            <div className="text-sm text-blue-600">
+              {value === '0' ? 
+                'Oczekuje na ocenę biblioteki' : 
+                `Przyznane punkty: ${value}`}
+            </div>
+          ) : (
+            <Input
+              type="number"
+              value={value}
+              onChange={(e) => onValueChange(e.target.value)}
+              className={`w-20 h-8 text-sm text-black rounded-md border-gray-200 
+                ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'focus:border-green-500 focus:ring-1 focus:ring-green-500'}`}
+              placeholder="Punkty"
+              min={0}
+              step={0.5}
+              disabled={disabled}
+            />
+          )}
         </div>
       )}
     </div>

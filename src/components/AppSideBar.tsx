@@ -1,4 +1,4 @@
-import { BookOpen, LogOut, Menu, Edit, Users } from 'lucide-react'
+import { BookOpen, LogOut, Edit, Users } from 'lucide-react'
 import logo from '../assets/Logo.svg'
 import {
 	Sidebar,
@@ -47,7 +47,6 @@ const categories: MenuItem[] = [
 	},
 ]
 
-// Update the UserData interface to match Keycloak data
 interface UserData {
 	name: string
 	lastName?: string
@@ -56,14 +55,14 @@ interface UserData {
 	username?: string
 }
 
-// Update the AppSidebarProps interface to include selectedCategory
 interface AppSidebarProps {
 	setSelectedCategory: (category: string) => void
 	selectedCategory: string
 	userData?: UserData
 	onLogout?: () => void
 	onEditQuestions?: () => void
-	onManageUsers?: () => void // Add this line
+	onManageUsers?: () => void
+	onManageLibrary?: () => void
 }
 
 export function AppSidebar({
@@ -72,165 +71,111 @@ export function AppSidebar({
 	userData = { name: 'Użytkownik', email: 'brak@email.com' },
 	onLogout = () => {},
 	onEditQuestions = () => {},
-	onManageUsers = () => {}, // Add default function
+	onManageUsers = () => {},
+	onManageLibrary = () => {},
 }: AppSidebarProps) {
-	const [isOpen, setIsOpen] = useState(false)
-	const { hasRole } = useAuth()
-	const canEditQuestions = hasRole('admin') || hasRole('dziekan')
+	const { hasRole } = useAuth();
+	const canEditQuestions = hasRole('admin') || hasRole('dziekan');
+	const canManageLibrary = hasRole('admin') || hasRole('biblioteka') || hasRole('library');
+	
+	console.log('User has library access:', canManageLibrary, 'Admin:', hasRole('admin'), 'Biblioteka:', hasRole('biblioteka'), 'Library:', hasRole('library'));
+
+	// Function to handle library management
+	const handleLibraryManagement = () => {
+		console.log('Library management button clicked');
+		// Force the function call even if it's undefined
+		if (typeof onManageLibrary === 'function') {
+			onManageLibrary();
+		} else {
+			console.error('onManageLibrary is not a function:', onManageLibrary);
+		}
+	};
 
 	return (
-		<>
-			<Button
-				variant="ghost"
-				size="icon"
-				className="lg:hidden fixed top-4 left-4 z-50"
-				onClick={() => setIsOpen(!isOpen)}>
-				<Menu className="h-6 w-6" />
-			</Button>
-			<div
-				className={`fixed lg:relative lg:block transition-transform duration-300 h-full ${
-					isOpen ? 'translate-x-0' : '-translate-x-full'
-				} lg:translate-x-0 z-40 w-64 shadow-lg`}>
-				<SidebarProvider>
-					<Sidebar className="h-full border-0">
-						<SidebarContent className="bg-gray-200 flex flex-col w-full h-full">
-							<SidebarGroup>
-								<SidebarGroupContent>
-									<SidebarMenu>
-										<div>
-											<img src={logo} alt="Godło" className="w-auto h-full object-cover" />
-											<div className="mt-16 ml-2">
-												<h2 className="text-2xl font-semibold text-ubbsecondary">Menu główne</h2>
-												<p className="text-sm text-gray-500 mt-1">Wybierz kategorię do oceny</p>
-											</div>
-										</div>
-										<div className="space-y-2 mt-6">
-											{categories.map(category => {
-												// Check if this category is the selected one
-												const isSelected = category.title === selectedCategory
-
-												return (
-													<SidebarMenuItem key={category.title} className="group relative">
-														<div
-															className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 ease-in-out cursor-pointer ${
-																isSelected
-																	? 'bg-white text-ubbprimary font-medium'
-																	: 'text-gray-700 hover:text-ubbprimary hover:bg-white/80'
-															}`}
-															onClick={() => {
-																setSelectedCategory(category.title)
-																console.log('Selected category for Firebase query:', category.title)
-																setIsOpen(false)
-															}}>
-															<div className="flex items-center space-x-3">
-																<category.icon
-																	className={`w-5 h-5 ${
-																		isSelected ? 'text-ubbprimary' : 'text-gray-400 group-hover:text-ubbprimary'
-																	} transition-colors duration-200`}
-																/>
-																<p className="text-sm font-medium">{category.title}</p>
-															</div>
-															{isSelected && (
-																<div className="absolute right-4">
-																	<svg
-																		className="w-4 h-4 text-ubbprimary"
-																		fill="none"
-																		stroke="currentColor"
-																		viewBox="0 0 24 24">
-																		<path
-																			strokeLinecap="round"
-																			strokeLinejoin="round"
-																			strokeWidth={2}
-																			d="M9 5l7 7-7 7"
-																		/>
-																	</svg>
-																</div>
-															)}
-															{!isSelected && (
-																<div className="absolute right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-																	<svg
-																		className="w-4 h-4 text-ubbprimary"
-																		fill="none"
-																		stroke="currentColor"
-																		viewBox="0 0 24 24">
-																		<path
-																			strokeLinecap="round"
-																			strokeLinejoin="round"
-																			strokeWidth={2}
-																			d="M9 5l7 7-7 7"
-																		/>
-																	</svg>
-																</div>
-															)}
-														</div>
-													</SidebarMenuItem>
-												)
-											})}
-										</div>
-									</SidebarMenu>
-								</SidebarGroupContent>
-							</SidebarGroup>
-
-							{/* Admin Actions Section */}
-							<div className="px-4 mt-8">
-								{/* Only show the admin buttons for users with appropriate roles */}
-								{canEditQuestions && (
-									<>
-										<Button
-											variant="outline"
-											className="mt-4 w-full border-gray-300 text-gray-700 hover:bg-gray-100"
-											onClick={onEditQuestions}>
-											<Edit className="h-4 w-4 mr-2" />
-											Edytuj pytania
-										</Button>
-										<Button
-											variant="outline"
-											className="mt-2 w-full border-gray-300 text-gray-700 hover:bg-gray-100"
-											onClick={onManageUsers}>
-											<Users className="h-4 w-4 mr-2" />
-											Zarządzaj użytkownikami
-										</Button>
-									</>
-								)}
-							</div>
-
-							<div className="mt-auto p-4">
-								<UserTile userData={userData} onLogout={onLogout} />
-							</div>
-						</SidebarContent>
-					</Sidebar>
-				</SidebarProvider>
+		<div className="w-72 h-full bg-white border-r border-gray-200 flex flex-col">
+			<div className="p-4 flex justify-center">
+				<img src={logo} alt="UBB Logo" className="h-12" />
 			</div>
-		</>
-	)
-}
-
-function UserTile({
-	userData = { name: 'Użytkownik', email: 'brak@email.com' },
-	onLogout = () => {},
-}: {
-	userData?: UserData
-	onLogout?: () => void
-}) {
-	return (
-		<div className="mt-auto p-4 bg-white rounded-lg shadow-lg border-none">
-			<div className="flex items-center space-x-4">
-				<Avatar className="h-12 w-12">
-					<AvatarImage src={userData.avatar} />
-					<AvatarFallback>
-						{userData.name
-							.split(' ')
-							.map(n => n[0])
-							.join('')}
-					</AvatarFallback>
-				</Avatar>
-				<div className="flex-1 min-w-0">
-					<p className="text-sm font-medium text-gray-900 truncate">{userData.name}</p>
-					<p className="text-sm text-gray-500 truncate">{userData.email}</p>
+			
+			<div className="flex-1 overflow-auto">
+				<div className="px-3 py-2"> 
+					<h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Kategorie</h2>
+					<nav className="mt-2 space-y-1">
+						{categories.map((category) => {
+							const Icon = category.icon;
+							return (
+								<button
+									key={category.title}
+									onClick={() => setSelectedCategory(category.title)}
+									className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+										selectedCategory === category.title
+											? 'bg-blue-50 text-blue-700'
+											: 'text-gray-700 hover:bg-gray-100'
+									}`}
+								>
+									<Icon className="mr-3 h-5 w-5 text-gray-500" />
+									<span className="truncate">{category.title}</span>
+								</button>
+							);
+						})}
+					</nav>
 				</div>
-				<Button variant="ghost" size="icon" onClick={onLogout} className="h-8 w-8 cursor-pointer">
-					<LogOut className="h-4 w-4" />
-				</Button>
+			</div>
+			
+			<div className="p-4 space-y-3 border-t border-gray-200">
+				{/* Admin actions */}
+				{canEditQuestions && (
+					<>
+						<Button
+							variant="outline"
+							className="w-full border-gray-300 text-gray-700 hover:bg-gray-100"
+							onClick={onEditQuestions}>
+							<Edit className="h-4 w-4 mr-2" />
+							Edytuj pytania
+						</Button>
+						
+						<Button
+							variant="outline"
+							className="w-full border-gray-300 text-gray-700 hover:bg-gray-100"
+							onClick={onManageUsers}>
+							<Users className="h-4 w-4 mr-2" />
+							Zarządzaj użytkownikami
+						</Button>
+					</>
+				)}
+				
+				{/* Library management button */}
+				{canManageLibrary && (
+					<Button
+						variant="outline"
+						className="w-full border-gray-300 text-gray-700 hover:bg-gray-100"
+						onClick={handleLibraryManagement}>
+						<BookOpen className="h-4 w-4 mr-2" />
+						Ocena publikacji
+					</Button>
+				)}
+				
+				{/* User profile */}
+				<div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+					<div className="flex items-center space-x-3">
+						<Avatar className="h-10 w-10">
+							<AvatarImage src={userData.avatar} />
+							<AvatarFallback>
+								{userData.name
+									.split(' ')
+									.map(n => n[0])
+									.join('')}
+							</AvatarFallback>
+						</Avatar>
+						<div className="flex-1 min-w-0">
+							<p className="text-sm font-medium text-gray-900 truncate">{userData.name}</p>
+							<p className="text-xs text-gray-500 truncate">{userData.email}</p>
+						</div>
+						<Button variant="ghost" size="icon" onClick={onLogout} className="h-8 w-8">
+							<LogOut className="h-4 w-4" />
+						</Button>
+					</div>
+				</div>
 			</div>
 		</div>
 	)

@@ -10,6 +10,7 @@ interface Question {
   points: number | string
   tooltip: string[]
   status?: 'pending' | 'approved' | 'rejected' // Add status field
+  isLibraryEvaluated?: boolean // Add this property
 }
 
 interface QuestionState {
@@ -42,12 +43,13 @@ export function useQuestions(selectedCategory: string) {
         // Mark this category as loaded
         dataLoadedRef.current[selectedCategory] = true;
         
+        // Fetch questions first
+        await fetchQuestions();
+        
         if (userData?.email) {
-          // Load responses first
+          // Then load responses
           await loadResponses(selectedCategory);
         }
-        // Then fetch questions
-        await fetchQuestions();
       } catch (err) {
         console.error('Error loading data:', err);
         setError('Nie udało się załadować danych');
@@ -61,31 +63,39 @@ export function useQuestions(selectedCategory: string) {
     loadData();
   }, [selectedCategory, userData?.email]);
 
+  // Inside the fetchQuestions function, modify the part where questions are processed:
+  
   const fetchQuestions = async () => {
     try {
       console.log('Fetching questions for category:', selectedCategory)
-
+  
       const q = query(collection(db, 'Questions'), where('category', '==', selectedCategory))
-
+  
       const querySnapshot = await getDocs(q)
       const fetchedQuestions: Question[] = []
-
+  
       querySnapshot.forEach(doc => {
         const data = doc.data()
-
+  
         // Parse tooltip string into array if it's a string
         const tooltip =
           typeof data.tooltip === 'string' ? data.tooltip.split(',') : Array.isArray(data.tooltip) ? data.tooltip : []
-
+  
+        // Check if this is the library-evaluated question
+        const isLibraryEvaluated = 
+          data.title === "Autorstwo artykułu/monografii (dotyczy pracowników dydaktycznych)" ||
+          data.isLibraryEvaluated === true;
+  
         fetchedQuestions.push({
           id: doc.id,
           ...data,
           tooltip: tooltip,
           // Only include status if it exists in the database
-          status: data.status
+          status: data.status,
+          isLibraryEvaluated: isLibraryEvaluated
         } as Question)
       })
-
+  
       setQuestions(fetchedQuestions)
       initializeQuestionStates(fetchedQuestions)
     } catch (err) {
@@ -108,16 +118,15 @@ export function useQuestions(selectedCategory: string) {
     const initialStates: Record<string, QuestionState> = {}
   
     fetchedQuestions.forEach(question => {
-      // Find if there's an existing response for this question
       const existingResponse = responses.find(r => r.questionId === question.id)
   
-      // Only set status if there's an existing response
       if (existingResponse) {
         question.status = existingResponse.status;
       }
   
       initialStates[question.id] = {
-        checked: existingResponse ? true : false,
+        // Set checked to true if there's an existing response OR if the question is approved
+        checked: existingResponse ? true : question.status === 'approved',
         value: existingResponse
           ? existingResponse.points.toString()
           : typeof question.points === 'number'
