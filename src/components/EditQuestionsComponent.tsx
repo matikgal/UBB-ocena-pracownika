@@ -49,7 +49,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 		addNewQuestion,
 		updateExistingQuestion,
 		deleteExistingQuestion,
-		addAllQuestionsFromFile
+		addAllQuestionsFromFile,
 	} = useQuestionsManager(selectedCategory)
 
 	// If user doesn't have access, show access denied component
@@ -58,7 +58,11 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 			<div className="h-full p-6 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col mx-2 my-2 overflow-auto">
 				<div className="flex justify-between items-center mb-6">
 					<h2 className="text-2xl font-semibold text-gray-800">Edycja pytań</h2>
-					<Button variant="ghost" size="icon" onClick={onClose} className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={onClose}
+						className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
 						<X className="h-5 w-5" />
 					</Button>
 				</div>
@@ -68,10 +72,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 					<p className="text-gray-600 max-w-md">
 						Tylko użytkownicy z rolą dziekana lub administratora mają dostęp do edycji pytań.
 					</p>
-					<Button 
-						onClick={onClose} 
-						className="mt-6 bg-gray-100 text-gray-800 hover:bg-gray-200"
-					>
+					<Button onClick={onClose} className="mt-6 bg-gray-100 text-gray-800 hover:bg-gray-200">
 						Powrót
 					</Button>
 				</div>
@@ -96,7 +97,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 		if (newQuestion.title.trim() === '') return
 
 		await addNewQuestion(newQuestion, selectedCategory)
-		
+
 		// Resetowanie formularza
 		setNewQuestion({
 			id: '',
@@ -169,10 +170,14 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 	// Wyświetlanie stanu ładowania, gdy nie ma jeszcze pytań
 	if (loading && questions.length === 0) {
 		return (
-			<div className="h-full p-6 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col mx-2 my-2 overflow-auto">
+			<div className="h-full p-6 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col mx-0 my-0 overflow-auto">
 				<div className="flex justify-between items-center mb-6">
 					<h2 className="text-2xl font-semibold text-gray-800">Edycja pytań</h2>
-					<Button variant="ghost" size="icon" onClick={onClose} className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={onClose}
+						className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
 						<X className="h-5 w-5" />
 					</Button>
 				</div>
@@ -188,16 +193,25 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 
 	// Główny widok komponentu
 	return (
-		<div className="h-full p-6 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col mx-2 my-2 text-gray-800">
+		<div className="h-full p-6 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col mx-0 my-0 text-gray-800">
 			<div className="flex justify-between items-center mb-6">
 				<h2 className="text-2xl font-semibold text-gray-800">Edycja pytań</h2>
-				<Button variant="ghost" size="icon" onClick={onClose} className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
+				<Button
+					variant="ghost"
+					size="icon"
+					onClick={onClose}
+					className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
 					<X className="h-5 w-5" />
 				</Button>
 			</div>
 
 			{error && (
-				<div className={`mb-4 p-3 rounded-md ${error.includes('Dodano') ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
+				<div
+					className={`mb-4 p-3 rounded-md ${
+						error.includes('Dodano')
+							? 'bg-green-50 text-green-600 border border-green-100'
+							: 'bg-red-50 text-red-600 border border-red-100'
+					}`}>
 					{error}
 				</div>
 			)}
@@ -223,7 +237,9 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 			<div className="flex-1 overflow-y-auto mb-4 pr-1">
 				<div className="space-y-4 mb-8">
 					{questions.map(question => (
-						<div key={question.id} className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors">
+						<div
+							key={question.id}
+							className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors">
 							{editingQuestion?.id === question.id ? (
 								// Formularz edycji pytania
 								<div className="space-y-3">
@@ -263,24 +279,22 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 												</Button>
 											</div>
 										))}
-										<Button 
-											variant="outline" 
-											size="sm" 
-											onClick={handleAddTooltip} 
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={handleAddTooltip}
 											className="mt-2 text-blue-600 border-blue-200 hover:bg-blue-50">
 											<Plus className="h-4 w-4 mr-2" /> Dodaj podpowiedź
 										</Button>
 									</div>
 									<div className="flex justify-end gap-2 mt-4">
-										<Button 
-											variant="outline" 
+										<Button
+											variant="outline"
 											onClick={() => setEditingQuestion(null)}
 											className="border-gray-200 hover:bg-gray-50 text-gray-700">
 											Anuluj
 										</Button>
-										<Button 
-											onClick={handleUpdateQuestion}
-											className="bg-blue-600 hover:bg-blue-700 text-white">
+										<Button onClick={handleUpdateQuestion} className="bg-blue-600 hover:bg-blue-700 text-white">
 											Zapisz zmiany
 										</Button>
 									</div>
@@ -291,16 +305,16 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 									<div className="flex justify-between">
 										<h4 className="font-medium text-gray-800">{question.title}</h4>
 										<div className="flex gap-2">
-											<Button 
-												variant="outline" 
-												size="sm" 
+											<Button
+												variant="outline"
+												size="sm"
 												onClick={() => setEditingQuestion(question)}
 												className="border-gray-200 hover:bg-gray-50 text-gray-700">
 												Edytuj
 											</Button>
-											<Button 
-												variant="outline" 
-												size="sm" 
+											<Button
+												variant="outline"
+												size="sm"
 												onClick={() => deleteExistingQuestion(question.id)}
 												className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700">
 												Usuń
@@ -367,17 +381,17 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 									</Button>
 								</div>
 							))}
-							<Button 
-								variant="outline" 
-								size="sm" 
-								onClick={handleAddTooltip} 
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={handleAddTooltip}
 								className="mt-2 text-blue-600 border-blue-200 hover:bg-blue-50">
 								<Plus className="h-4 w-4 mr-2" /> Dodaj podpowiedź
 							</Button>
 						</div>
-						<Button 
-							onClick={handleAddQuestion} 
-							disabled={!newQuestion.title.trim()} 
+						<Button
+							onClick={handleAddQuestion}
+							disabled={!newQuestion.title.trim()}
 							className="mt-4 bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-200">
 							<Plus className="h-4 w-4 mr-2" /> Dodaj pytanie
 						</Button>
@@ -387,21 +401,17 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 
 			{/* Przyciski akcji na dole komponentu */}
 			<div className="flex justify-end gap-4 mt-4 border-t border-gray-100 pt-4">
-				<Button 
-					onClick={() => addAllQuestionsFromFile(selectedCategory)} 
+				<Button
+					onClick={() => addAllQuestionsFromFile(selectedCategory)}
 					disabled={loading}
-					className="mr-auto bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-200"
-				>
-					<Database className="h-4 w-4 mr-2" /> 
+					className="mr-auto bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-200">
+					<Database className="h-4 w-4 mr-2" />
 					{loading ? 'Dodawanie pytań...' : 'Dodaj wszystkie pytania z pliku'}
 				</Button>
-				<Button 
-					variant="outline" 
-					onClick={onClose}
-					className="border-gray-200 hover:bg-gray-50 text-gray-700">
+				<Button variant="outline" onClick={onClose} className="border-gray-200 hover:bg-gray-50 text-gray-700">
 					Anuluj
 				</Button>
-				<Button 
+				<Button
 					onClick={handleSaveChanges}
 					className="bg-green-600 hover:bg-green-700 text-white transition-colors duration-200">
 					<Save className="h-4 w-4 mr-2" /> Zapisz wszystkie zmiany

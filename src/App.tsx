@@ -3,7 +3,7 @@ import AppHeader from './components/AppHeader'
 import QuestionsComponent from './components/questions/QuestionsComponent'
 import { useState } from 'react'
 import { AppSidebar } from './components/AppSideBar'
-import LoginComponent from './components/auth/LoginComponent'  // Updated import path
+import LoginComponent from './components/auth/LoginComponent' // Updated import path
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { EditQuestionsComponent } from './components/EditQuestionsComponent'
 import { UserManagementComponent } from './components/users/UserManagementComponent'
@@ -79,12 +79,12 @@ function AppContent() {
 		// Only allow users with appropriate roles to manage library evaluations
 		// Update this condition to match the role check above
 		if (canManageLibrary) {
-			console.log('Setting isManagingLibrary to true');
+			console.log('Setting isManagingLibrary to true')
 			setIsManagingLibrary(true)
 			setIsManagingUsers(false)
 			setIsEditingQuestions(false)
 		} else {
-			console.log('User does not have library access');
+			console.log('User does not have library access')
 		}
 	}
 
@@ -120,20 +120,15 @@ function AppContent() {
 						onManageUsers={handleManageUsers}
 						onManageLibrary={handleManageLibrary}
 					/>
-					<div className="flex-1 flex flex-col pl-8 pr-2 ml-18">
+					<div className="flex-1 flex flex-col pl-1 ">
 						<div className="mb-2">
 							<AppHeader />
 						</div>
-						<main className="flex-1 overflow-hidden pb-4">
+						<main className="flex-1 overflow-hidden pb-4 px-2">
 							{isEditingQuestions ? (
-								<EditQuestionsComponent 
-									onClose={handleCloseEdit}
-									onSave={handleSaveQuestions}
-								/>
+								<EditQuestionsComponent onClose={handleCloseEdit} onSave={handleSaveQuestions} />
 							) : isManagingUsers ? (
-								<UserManagementComponent 
-									onClose={handleCloseUserManagement}
-								/>
+								<UserManagementComponent onClose={handleCloseUserManagement} />
 							) : isManagingLibrary ? (
 								<LibraryEvaluationComponent />
 							) : (

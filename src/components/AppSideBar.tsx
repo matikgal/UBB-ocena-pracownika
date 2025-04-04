@@ -1,17 +1,7 @@
 import { BookOpen, LogOut, Edit, Users } from 'lucide-react'
 import logo from '../assets/Logo.svg'
-import {
-	Sidebar,
-	SidebarContent,
-	SidebarGroup,
-	SidebarGroupContent,
-	SidebarMenu,
-	SidebarMenuItem,
-	SidebarProvider,
-} from '../components/ui/sidebar'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar'
 import { Button } from '../components/ui/button'
-import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 
 import {
@@ -74,93 +64,103 @@ export function AppSidebar({
 	onManageUsers = () => {},
 	onManageLibrary = () => {},
 }: AppSidebarProps) {
-	const { hasRole } = useAuth();
-	const canEditQuestions = hasRole('admin') || hasRole('dziekan');
-	const canManageLibrary = hasRole('admin') || hasRole('biblioteka') || hasRole('library');
-	
-	console.log('User has library access:', canManageLibrary, 'Admin:', hasRole('admin'), 'Biblioteka:', hasRole('biblioteka'), 'Library:', hasRole('library'));
+	const { hasRole } = useAuth()
+	const canEditQuestions = hasRole('admin') || hasRole('dziekan')
+	const canManageLibrary = hasRole('admin') || hasRole('biblioteka') || hasRole('library')
+
+	console.log(
+		'User has library access:',
+		canManageLibrary,
+		'Admin:',
+		hasRole('admin'),
+		'Biblioteka:',
+		hasRole('biblioteka'),
+		'Library:',
+		hasRole('library')
+	)
 
 	// Function to handle library management
 	const handleLibraryManagement = () => {
-		console.log('Library management button clicked');
+		console.log('Library management button clicked')
 		// Force the function call even if it's undefined
 		if (typeof onManageLibrary === 'function') {
-			onManageLibrary();
+			onManageLibrary()
 		} else {
-			console.error('onManageLibrary is not a function:', onManageLibrary);
+			console.error('onManageLibrary is not a function:', onManageLibrary)
 		}
-	};
+	}
 
 	return (
-		<div className="w-72 h-full bg-white border-r border-gray-200 flex flex-col">
-			<div className="p-4 flex justify-center">
-				<img src={logo} alt="UBB Logo" className="h-12" />
+		<div className="w-80 h-full bg-gray-50 border-r border-gray-200 flex flex-col shadow-sm">
+			<div className="p-2 flex justify-center border-b border-gray-200">
+				<img src={logo} alt="UBB Logo" className="h-20" />
 			</div>
-			
-			<div className="flex-1 overflow-auto">
-				<div className="px-3 py-2"> 
-					<h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Kategorie</h2>
-					<nav className="mt-2 space-y-1">
-						{categories.map((category) => {
-							const Icon = category.icon;
-							return (
-								<button
-									key={category.title}
-									onClick={() => setSelectedCategory(category.title)}
-									className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-										selectedCategory === category.title
-											? 'bg-blue-50 text-blue-700'
-											: 'text-gray-700 hover:bg-gray-100'
+
+			<div className="flex-1 overflow-auto px-4 py-5">
+				<h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-3 ml-2">Kategorie</h2>
+				<nav className="space-y-1.5">
+					{categories.map(category => {
+						const Icon = category.icon
+						return (
+							<button
+								key={category.title}
+								onClick={() => setSelectedCategory(category.title)}
+								className={`w-full cursor-pointer flex items-start px-4 py-2.5 text-sm font-medium rounded-lg transition-all ${
+									selectedCategory === category.title
+										? 'bg-blue-100 text-blue-800 shadow-sm'
+										: 'text-gray-700 hover:bg-gray-100'
+								}`}>
+								<Icon
+									className={`mt-0.5 flex-shrink-0 mr-3 h-5 w-5 ${
+										selectedCategory === category.title ? 'text-blue-600' : 'text-gray-500'
 									}`}
-								>
-									<Icon className="mr-3 h-5 w-5 text-gray-500" />
-									<span className="truncate">{category.title}</span>
-								</button>
-							);
-						})}
-					</nav>
-				</div>
+								/>
+								<span className="break-words text-left w-full">{category.title}</span>
+							</button>
+						)
+					})}
+				</nav>
 			</div>
-			
-			<div className="p-4 space-y-3 border-t border-gray-200">
+
+			<div className="p-4 space-y-3 border-t border-gray-200 bg-gray-100">
 				{/* Admin actions */}
 				{canEditQuestions && (
-					<>
+					<div className="space-y-2">
 						<Button
 							variant="outline"
-							className="w-full border-gray-300 text-gray-700 hover:bg-gray-100"
+							className="w-full cursor-pointer border-gray-300 text-gray-700 hover:bg-white hover:text-blue-700 transition-colors"
 							onClick={onEditQuestions}>
 							<Edit className="h-4 w-4 mr-2" />
 							Edytuj pytania
 						</Button>
-						
+
 						<Button
 							variant="outline"
-							className="w-full border-gray-300 text-gray-700 hover:bg-gray-100"
+							className="w-full cursor-pointer border-gray-300 text-gray-700 hover:bg-white hover:text-blue-700 transition-colors"
 							onClick={onManageUsers}>
 							<Users className="h-4 w-4 mr-2" />
 							Zarządzaj użytkownikami
 						</Button>
-					</>
+					</div>
 				)}
-				
+
 				{/* Library management button */}
 				{canManageLibrary && (
 					<Button
 						variant="outline"
-						className="w-full border-gray-300 text-gray-700 hover:bg-gray-100"
+						className="w-full cursor-pointer border-gray-300 text-gray-700 hover:bg-white hover:text-blue-700 transition-colors"
 						onClick={handleLibraryManagement}>
 						<BookOpen className="h-4 w-4 mr-2" />
 						Ocena publikacji
 					</Button>
 				)}
-				
+
 				{/* User profile */}
-				<div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+				<div className="mt-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
 					<div className="flex items-center space-x-3">
-						<Avatar className="h-10 w-10">
+						<Avatar className="h-10 w-10 border-2 border-gray-100">
 							<AvatarImage src={userData.avatar} />
-							<AvatarFallback>
+							<AvatarFallback className="bg-blue-100 text-blue-800">
 								{userData.name
 									.split(' ')
 									.map(n => n[0])
@@ -171,8 +171,12 @@ export function AppSidebar({
 							<p className="text-sm font-medium text-gray-900 truncate">{userData.name}</p>
 							<p className="text-xs text-gray-500 truncate">{userData.email}</p>
 						</div>
-						<Button variant="ghost" size="icon" onClick={onLogout} className="h-8 w-8">
-							<LogOut className="h-4 w-4" />
+						<Button
+							variant="ghost"
+							size="icon"
+							onClick={onLogout}
+							className="h-8 w-8 cursor-pointer rounded-full hover:bg-red-50 hover:text-red-600 transition-colors">
+							<LogOut className="h-4 w-4 text-gray-700" />
 						</Button>
 					</div>
 				</div>
