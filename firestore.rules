@@ -2,21 +2,30 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Default rule - deny all
+    // Domyślna zasada - blokuje wszystkie operacje
     match /{document=**} {
       allow read, write: if false;
     }
     
-    // Allow authenticated users to read their own data
+    // Umożliwienie użytkownikom odczyt i zapis tylko do własnych danych
     match /Users/{userEmail} {
       allow read: if request.auth != null && request.auth.token.email == userEmail;
-      // Only allow admins or the system to write user data
-      allow write: if false; // This is handled by your backend code
-      
-      // Allow users to read and write their own responses
-      match /responses/{responseId} {
-        allow read, write: if request.auth != null && request.auth.token.email == userEmail;
-      }
+      allow write: if request.auth != null && request.auth.token.email == userEmail;
+    }
+
+    // Kolekcja odpowiedzi użytkowników - umożliwienie odczytu i zapisu tylko do swoich odpowiedzi
+    match /Users/{userEmail}/responses/{responseId} {
+      allow read, write: if request.auth != null && request.auth.token.email == userEmail;
+    }
+
+    // Kolekcja pytań - umożliwia odczyt wszystkim uwierzytelnionym użytkownikom
+    match /Questions/{questionId} {
+      allow read: if request.auth != null;
+
+      // Tylko użytkownicy z rolą 'dziekan' lub 'admin' mogą pisać
+      allow write: if request.auth != null && (
+                      'dziekan' in request.auth.token.realm_access.roles ||
+                      'admin' in request.auth.token.realm_access.roles);
     }
   }
 }

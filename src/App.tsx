@@ -1,16 +1,19 @@
 import { BrowserRouter as Router } from 'react-router-dom'
 import AppHeader from './components/AppHeader'
-import QuestionsComponent from './components/QuestionsComponent'
+import QuestionsComponent from './components/questions/QuestionsComponent'
 import { useState } from 'react'
 import { AppSidebar } from './components/AppSideBar'
-import LoginComponent from './components/LoginComponent'
+import LoginComponent from './components/auth/LoginComponent'  // Updated import path
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { EditQuestionsComponent } from './components/EditQuestionsComponent'
+import { UserManagementComponent } from './components/users/UserManagementComponent'
 
 function AppContent() {
 	const [selectedCategory, setSelectedCategory] = useState<string>('Publikacje dydaktyczne')
 	const [isEditingQuestions, setIsEditingQuestions] = useState<boolean>(false)
-	const { isAuthenticated, isLoading, logout, userData, error } = useAuth()
+	const [isManagingUsers, setIsManagingUsers] = useState<boolean>(false)
+	const { isAuthenticated, isLoading, logout, userData, hasRole } = useAuth()
+	const canEditQuestions = hasRole('admin') || hasRole('dziekan')
 
 	// Define categories array to match the sidebar categories
 	const categories = [
@@ -32,7 +35,7 @@ function AppContent() {
 
 	// Show login screen if not authenticated
 	if (!isAuthenticated) {
-		return <LoginComponent error={error} />
+		return <LoginComponent />
 	}
 
 	// Handle navigation between categories
@@ -51,11 +54,27 @@ function AppContent() {
 	}
 
 	const handleEditQuestions = () => {
-		setIsEditingQuestions(true)
+		// Only allow users with appropriate roles to edit questions
+		if (canEditQuestions) {
+			setIsEditingQuestions(true)
+			setIsManagingUsers(false)
+		}
+	}
+
+	const handleManageUsers = () => {
+		// Only allow users with appropriate roles to manage users
+		if (canEditQuestions) {
+			setIsManagingUsers(true)
+			setIsEditingQuestions(false)
+		}
 	}
 
 	const handleCloseEdit = () => {
 		setIsEditingQuestions(false)
+	}
+
+	const handleCloseUserManagement = () => {
+		setIsManagingUsers(false)
 	}
 
 	const handleSaveQuestions = (updatedQuestions: any) => {
@@ -75,6 +94,7 @@ function AppContent() {
 						onLogout={logout}
 						userData={userData}
 						onEditQuestions={handleEditQuestions}
+						onManageUsers={handleManageUsers}
 					/>
 					<div className="flex-1 flex flex-col pl-8 pr-2 ml-18">
 						<div className="mb-2">
@@ -85,6 +105,10 @@ function AppContent() {
 								<EditQuestionsComponent 
 									onClose={handleCloseEdit}
 									onSave={handleSaveQuestions}
+								/>
+							) : isManagingUsers ? (
+								<UserManagementComponent 
+									onClose={handleCloseUserManagement}
 								/>
 							) : (
 								<QuestionsComponent

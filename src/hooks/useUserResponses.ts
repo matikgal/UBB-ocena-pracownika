@@ -11,6 +11,10 @@ export interface UserResponse {
   category: string;
   createdAt?: Date;
   updatedAt?: Date;
+  status?: 'pending' | 'approved' | 'rejected'; // New status field
+  verifiedBy?: string; // Track who verified the response
+  verifiedAt?: Date; // When it was verified
+  rejectionReason?: string; // Optional reason for rejection
 }
 
 export function useUserResponses() {
@@ -108,7 +112,7 @@ export function useUserResponses() {
       setError('User not authenticated');
       return null;
     }
-
+  
     try {
       setLoading(true);
       setError(null);
@@ -131,7 +135,11 @@ export function useUserResponses() {
         const existingResponseDoc = querySnapshot.docs[0];
         await updateDoc(doc(db, 'Users', userEmail, 'responses', existingResponseDoc.id), {
           points: points,
-          updatedAt: new Date()
+          updatedAt: new Date(),
+          status: 'pending', // Reset status to pending when updated
+          verifiedBy: null,
+          verifiedAt: null,
+          rejectionReason: null
         });
         responseId = existingResponseDoc.id;
       } else {
@@ -141,7 +149,8 @@ export function useUserResponses() {
           questionTitle,
           points,
           category,
-          createdAt: new Date()
+          createdAt: new Date(),
+          status: 'pending' // Set initial status to pending
         };
         
         const docRef = await addDoc(responsesCollectionRef, response);

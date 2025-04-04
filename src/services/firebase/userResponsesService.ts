@@ -27,11 +27,19 @@ export async function saveUserResponse(userEmail: string, response: UserResponse
     
     const querySnapshot = await getDocs(q);
     
+    // Convert points value - replace commas with dots if it's a string
+    let pointsValue = response.points;
+    if (typeof pointsValue === 'string') {
+      pointsValue = parseFloat(String(pointsValue).replace(',', '.'));
+    }
+    
     if (!querySnapshot.empty) {
       // Update existing response
       const existingResponseDoc = querySnapshot.docs[0];
+      console.log(pointsValue),
       await updateDoc(doc(db, 'Users', userEmail, 'responses', existingResponseDoc.id), {
-        points: response.points,
+        
+        points: pointsValue,
         updatedAt: new Date()
       });
       return existingResponseDoc.id;
@@ -39,6 +47,7 @@ export async function saveUserResponse(userEmail: string, response: UserResponse
       // Add new response
       const docRef = await addDoc(responsesCollectionRef, {
         ...response,
+        points: pointsValue,
         createdAt: new Date()
       });
       return docRef.id;

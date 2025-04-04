@@ -1,7 +1,9 @@
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip'
 import { GoInfo } from 'react-icons/go'
-import { Checkbox } from './ui/checkbox'
-import { Input } from './ui/input'
+import { Checkbox } from '../ui/checkbox'
+import { Input } from '../ui/input'
+import { Trash } from 'lucide-react'
+import { Button } from '../ui/button'
 
 interface Question {
   id: string
@@ -16,6 +18,7 @@ interface QuestionItemProps {
   value: string
   onCheckChange: () => void
   onValueChange: (value: string) => void
+  onDelete?: (questionId: string) => void // Add delete handler prop
 }
 
 export function QuestionItem({ 
@@ -23,7 +26,8 @@ export function QuestionItem({
   checked, 
   value, 
   onCheckChange, 
-  onValueChange 
+  onValueChange,
+  onDelete
 }: QuestionItemProps) {
   return (
     <div 
@@ -34,7 +38,8 @@ export function QuestionItem({
           e.target instanceof HTMLInputElement || 
           (e.target instanceof Element && (
             e.target.closest('.cursor-help') || 
-            e.target.closest('input')
+            e.target.closest('input') ||
+            e.target.closest('button') // Prevent triggering when clicking delete button
           ))
         ) {
           return;
@@ -63,7 +68,24 @@ export function QuestionItem({
               {question.title}
             </label>
             
-            <QuestionTooltip tooltip={question.tooltip} />
+            <div className="flex items-center gap-2">
+              <QuestionTooltip tooltip={question.tooltip} />
+              
+              {/* Add delete button that only shows when question is checked */}
+              {checked && onDelete && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(question.id);
+                  }}
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50 p-0 h-6 w-6"
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
           
           <QuestionPoints 
@@ -132,6 +154,8 @@ function QuestionPoints({
             onChange={(e) => onValueChange(e.target.value)}
             className="w-20 h-8 text-sm text-black rounded-md border-gray-200 focus:border-green-500 focus:ring-1 focus:ring-green-500"
             placeholder="Punkty"
+            min={0}
+            step={0.5}
           />
          
         </div>

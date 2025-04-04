@@ -12,6 +12,7 @@ interface AuthContextType {
   logout: () => void;
   userData: any;
   error: string | null;
+  hasRole: (role: string) => boolean; // Add this line
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,8 +47,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             lastName: keycloak.tokenParsed?.family_name || '',
             email: keycloak.tokenParsed?.email || '',
             username: keycloak.tokenParsed?.preferred_username || '',
-            // Include any other fields you need
+            roles: keycloak.tokenParsed?.realm_access?.roles || [], // Extract roles
           };
+          
+          console.log('Extracted user data:', userData); // Log user data
           
           setUserData(userData);
           
@@ -68,21 +71,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     };
     
-    // Add this new function to save user data to Firestore
     const saveUserToFirestore = async (userData: any) => {
       try {
-        // Use email as document ID since it's unique for each user
         const userEmail = userData.email;
         if (!userEmail) {
           console.error('No email found in user data');
           return;
         }
         
-        // Check if user already exists in Firestore
         const userDocRef = doc(db, 'Users', userEmail);
         const userDoc = await getDoc(userDocRef);
         
-        // Only create/update if user doesn't exist
         if (!userDoc.exists()) {
           await setDoc(userDocRef, {
             ...userData,
@@ -91,7 +90,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           });
           console.log('User added to Firestore');
         } else {
-          // Optionally update lastLogin time
           await setDoc(userDocRef, {
             lastLogin: new Date()
           }, { merge: true });
@@ -118,8 +116,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     keycloak.logout({ redirectUri: window.location.origin });
   };
 
+  // Add this function to check if user has a specific role
+  const hasRole = (role: string): boolean => {
+    if (!userData || !userData.roles) {
+      return false;
+    }
+    return userData.roles.includes(role);
+  };
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, token, login, logout, userData, error }}>
+    <AuthContext.Provider value={{ 
+      isAuthenticated, 
+      isLoading, 
+      token, 
+      login, 
+      logout, 
+      userData, 
+      error,
+      hasRole // Add this to the context value
+    }}>
       {children}
     </AuthContext.Provider>
   );

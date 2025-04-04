@@ -1,4 +1,4 @@
-import { BookOpen, LogOut, Menu, Edit } from 'lucide-react'
+import { BookOpen, LogOut, Menu, Edit, Users } from 'lucide-react'
 import logo from '../assets/Logo.svg'
 import {
 	Sidebar,
@@ -7,11 +7,12 @@ import {
 	SidebarGroupContent,
 	SidebarMenu,
 	SidebarMenuItem,
-	SidebarProvider, // Add this import
+	SidebarProvider,
 } from '../components/ui/sidebar'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar'
 import { Button } from '../components/ui/button'
 import { useState } from 'react'
+import { useAuth } from '../contexts/AuthContext'
 
 import {
 	publikacjeDydaktyczne,
@@ -39,7 +40,7 @@ const categories: MenuItem[] = [
 		subcategories: funkcjeDydaktyczne,
 	},
 	{
-		title: 'Nagrody i wyróznienia', // Make sure this matches exactly what's in your categories array
+		title: 'Nagrody i wyróznienia',
 		url: '#',
 		icon: BookOpen,
 		subcategories: nagrodyWyroznienia,
@@ -61,7 +62,8 @@ interface AppSidebarProps {
 	selectedCategory: string
 	userData?: UserData
 	onLogout?: () => void
-	onEditQuestions?: () => void // Add this line
+	onEditQuestions?: () => void
+	onManageUsers?: () => void // Add this line
 }
 
 export function AppSidebar({
@@ -69,9 +71,12 @@ export function AppSidebar({
 	selectedCategory,
 	userData = { name: 'Użytkownik', email: 'brak@email.com' },
 	onLogout = () => {},
-	onEditQuestions = () => {}, // Add default function
+	onEditQuestions = () => {},
+	onManageUsers = () => {}, // Add default function
 }: AppSidebarProps) {
 	const [isOpen, setIsOpen] = useState(false)
+	const { hasRole } = useAuth()
+	const canEditQuestions = hasRole('admin') || hasRole('dziekan')
 
 	return (
 		<>
@@ -166,14 +171,27 @@ export function AppSidebar({
 								</SidebarGroupContent>
 							</SidebarGroup>
 
-							{/* Add Edit Questions Button */}
+							{/* Admin Actions Section */}
 							<div className="px-4 mt-8">
-								<Button
-									onClick={onEditQuestions}
-									className="w-full bg-ubbprimary hover:bg-ubbprimary/90 text-white flex items-center justify-center gap-2 py-2  cursor-pointer">
-									<Edit className="h-4 w-4" />
-									<span>Edytuj pytania</span>
-								</Button>
+								{/* Only show the admin buttons for users with appropriate roles */}
+								{canEditQuestions && (
+									<>
+										<Button
+											variant="outline"
+											className="mt-4 w-full border-gray-300 text-gray-700 hover:bg-gray-100"
+											onClick={onEditQuestions}>
+											<Edit className="h-4 w-4 mr-2" />
+											Edytuj pytania
+										</Button>
+										<Button
+											variant="outline"
+											className="mt-2 w-full border-gray-300 text-gray-700 hover:bg-gray-100"
+											onClick={onManageUsers}>
+											<Users className="h-4 w-4 mr-2" />
+											Zarządzaj użytkownikami
+										</Button>
+									</>
+								)}
 							</div>
 
 							<div className="mt-auto p-4">
