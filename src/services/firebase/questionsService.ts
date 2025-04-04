@@ -9,6 +9,7 @@ export interface Question {
   category: string;
   createdAt?: Date;
   updatedAt?: Date;
+  status?: 'pending' | 'approved' | 'rejected'; // Add status field to interface
 }
 
 /**
@@ -37,7 +38,9 @@ export async function fetchQuestionsByCategory(categoryName: string): Promise<Qu
         title: data.title,
         points: data.points,
         tooltip: tooltip,
-        category: data.category
+        category: data.category,
+        // Only include status if it exists in the database, don't set a default
+        status: data.status
       });
     });
     

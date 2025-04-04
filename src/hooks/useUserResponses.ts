@@ -68,7 +68,7 @@ export function useUserResponses() {
       
       const querySnapshot = await getDocs(q);
       const fetchedResponses: UserResponse[] = [];
-      
+  
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         fetchedResponses.push({
@@ -78,7 +78,11 @@ export function useUserResponses() {
           points: data.points,
           category: data.category,
           createdAt: data.createdAt?.toDate(),
-          updatedAt: data.updatedAt?.toDate()
+          updatedAt: data.updatedAt?.toDate(),
+          status: data.status, // Only use the status from the database, no default
+          verifiedBy: data.verifiedBy,
+          verifiedAt: data.verifiedAt?.toDate(),
+          rejectionReason: data.rejectionReason
         } as UserResponse);
       });
       
@@ -107,12 +111,18 @@ export function useUserResponses() {
   };
 
   // Save a user response
-  const saveResponse = async (questionId: string, questionTitle: string, points: number, category: string) => {
+  const saveResponse = async (questionId: string, questionTitle: string, points: number, category: string, questionStatus?: string) => {
     if (!userData?.email) {
       setError('User not authenticated');
       return null;
     }
   
+    // Prevent saving if the question is already approved
+    if (questionStatus === 'approved') {
+      setError('Nie można edytować zatwierdzonych odpowiedzi');
+      return null;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -133,6 +143,15 @@ export function useUserResponses() {
       if (!querySnapshot.empty) {
         // Update existing response
         const existingResponseDoc = querySnapshot.docs[0];
+        const existingData = existingResponseDoc.data();
+        
+        // Check if the existing response is approved
+        if (existingData.status === 'approved') {
+          setError('Nie można edytować zatwierdzonych odpowiedzi');
+          return null;
+        }
+        
+        // Update existing response
         await updateDoc(doc(db, 'Users', userEmail, 'responses', existingResponseDoc.id), {
           points: points,
           updatedAt: new Date(),
@@ -195,12 +214,79 @@ export function useUserResponses() {
     }
   };
 
+  // Add these functions before the return statement in useUserResponses
+  
+  // Verify a user response (approve or reject)
+  const verifyResponse = async (
+    userEmail: string, 
+    responseId: string, 
+    status: 'approved' | 'rejected', 
+    rejectionReason?: string
+  ) => {
+    if (!userData?.email) {
+      setError('User not authenticated');
+      return false;
+    }
+  
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const verifierEmail = userData.email;
+      
+      // Create update object with proper types
+      const updateData: Record<string, any> = {
+        status: status,
+        verifiedBy: verifierEmail,
+        verifiedAt: new Date()
+      };
+      
+      // Only add rejectionReason for rejected status and ensure it's null instead of undefined
+      if (status === 'rejected') {
+        updateData.rejectionReason = rejectionReason || null; // Use null instead of undefined
+      } else {
+        updateData.rejectionReason = null; // Always use null instead of undefined
+      }
+      
+      await updateDoc(doc(db, 'Users', userEmail, 'responses', responseId), updateData);
+      
+      // If we're viewing this user's responses, update the local state
+      if (responses.some(r => r.id === responseId)) {
+        setResponses(prev => prev.map(r => {
+          if (r.id === responseId) {
+            // Create a properly typed object
+            const updatedResponse: UserResponse = {
+              ...r,
+              status,
+              verifiedBy: verifierEmail,
+              verifiedAt: new Date(),
+              // Use null instead of undefined
+              rejectionReason: status === 'rejected' ? (rejectionReason || undefined) : undefined
+            };
+            return updatedResponse;
+          }
+          return r;
+        }));
+      }
+      
+      return true;
+    } catch (err) {
+      console.error('Error verifying response:', err);
+      setError('Nie udało się zweryfikować odpowiedzi');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Include the new function in the return value
   return {
     responses,
     loading,
     error,
     saveResponse,
     loadResponses,
-    deleteResponse
+    deleteResponse,
+    verifyResponse // Add the new function
   };
 }

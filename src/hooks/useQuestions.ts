@@ -9,6 +9,7 @@ interface Question {
   title: string
   points: number | string
   tooltip: string[]
+  status?: 'pending' | 'approved' | 'rejected' // Add status field
 }
 
 interface QuestionState {
@@ -80,6 +81,8 @@ export function useQuestions(selectedCategory: string) {
           id: doc.id,
           ...data,
           tooltip: tooltip,
+          // Only include status if it exists in the database
+          status: data.status
         } as Question)
       })
 
@@ -103,11 +106,16 @@ export function useQuestions(selectedCategory: string) {
   // Update initializeQuestionStates to properly handle existing responses
   const initializeQuestionStates = (fetchedQuestions: Question[]) => {
     const initialStates: Record<string, QuestionState> = {}
-
+  
     fetchedQuestions.forEach(question => {
       // Find if there's an existing response for this question
       const existingResponse = responses.find(r => r.questionId === question.id)
-
+  
+      // Only set status if there's an existing response
+      if (existingResponse) {
+        question.status = existingResponse.status;
+      }
+  
       initialStates[question.id] = {
         checked: existingResponse ? true : false,
         value: existingResponse
@@ -117,7 +125,7 @@ export function useQuestions(selectedCategory: string) {
           : '0',
       }
     })
-
+  
     setQuestionStates(initialStates)
   }
 
@@ -170,7 +178,11 @@ export function useQuestions(selectedCategory: string) {
       for (const item of checkedQuestions) {
         const question = questions.find(q => q.id === item.id);
         if (question) {
-          await saveResponse(question.id, question.title, item.points, selectedCategory);
+          // Skip questions with approved status
+          if (question.status === 'approved') {
+            continue;
+          }
+          await saveResponse(question.id, question.title, item.points, selectedCategory, question.status);
         }
       }
   

@@ -10,6 +10,7 @@ interface Question {
   title: string
   points: number | string
   tooltip: string[]
+  status?: 'pending' | 'approved' | 'rejected' // Add status field
 }
 
 interface QuestionItemProps {
@@ -18,7 +19,7 @@ interface QuestionItemProps {
   value: string
   onCheckChange: () => void
   onValueChange: (value: string) => void
-  onDelete?: (questionId: string) => void // Add delete handler prop
+  onDelete?: (questionId: string) => void
 }
 
 export function QuestionItem({ 
@@ -29,17 +30,43 @@ export function QuestionItem({
   onValueChange,
   onDelete
 }: QuestionItemProps) {
+ 
+  
+  // Determine border and background color based on status
+  const getBorderAndBgColor = () => {
+    if (!checked) return 'border-gray-200 bg-white';
+    
+    // If checked and has status, use status-based colors
+    if (question.status) {
+      switch (question.status) {
+        case 'approved':
+          return 'border-green-500 bg-green-50';
+        case 'rejected':
+          return 'border-red-500 bg-red-50';
+        case 'pending':
+          return 'border-amber-500 bg-amber-50';
+      }
+    }
+    
+    // Default for checked items without status (or with unknown status)
+    return 'border-blue-500 bg-blue-50';
+  };
+
+  // Determine if editing is disabled (when approved)
+  const isEditingDisabled = question.status === 'approved';
+
   return (
     <div 
-      className={`bg-white p-4 rounded-lg shadow border-2 ${checked ? 'border-green-500 bg-green-50' : 'border-gray-200'} transition-all cursor-pointer`}
+      className={`p-4 rounded-lg shadow border-2 ${getBorderAndBgColor()} transition-all ${isEditingDisabled ? 'cursor-default' : 'cursor-pointer'}`}
       onClick={(e) => {
-        // Prevent triggering if clicking on input or tooltip
+        // Prevent triggering if clicking on input, tooltip, or if editing is disabled
         if (
+          isEditingDisabled ||
           e.target instanceof HTMLInputElement || 
           (e.target instanceof Element && (
             e.target.closest('.cursor-help') || 
             e.target.closest('input') ||
-            e.target.closest('button') // Prevent triggering when clicking delete button
+            e.target.closest('button')
           ))
         ) {
           return;
@@ -51,10 +78,10 @@ export function QuestionItem({
         <Checkbox 
           id={`question-${question.id}`} 
           checked={checked}
-          onCheckedChange={() => onCheckChange()}
+          onCheckedChange={() => !isEditingDisabled && onCheckChange()}
           className="mt-1 cursor-pointer"
+          disabled={isEditingDisabled}
           onClick={(e) => {
-            // Stop propagation to prevent the parent div handler from firing
             e.stopPropagation();
           }}
         />
@@ -63,7 +90,12 @@ export function QuestionItem({
           <div className="flex items-start justify-between">
             <label 
               htmlFor={`question-${question.id}`}
-              className={`text-sm font-medium leading-tight cursor-pointer transition-colors ${checked ? 'text-green-700' : 'text-gray-800'}`}
+              className={`text-sm font-medium leading-tight ${isEditingDisabled ? 'cursor-default' : 'cursor-pointer'} transition-colors ${
+                question.status === 'approved' ? 'text-green-700' : 
+                question.status === 'rejected' ? 'text-red-700' :
+                question.status === 'pending' ? 'text-amber-700' :
+                checked ? 'text-green-700' : 'text-gray-800'
+              }`}
             >
               {question.title}
             </label>
@@ -71,8 +103,20 @@ export function QuestionItem({
             <div className="flex items-center gap-2">
               <QuestionTooltip tooltip={question.tooltip} />
               
-              {/* Add delete button that only shows when question is checked */}
-              {checked && onDelete && (
+              {/* Status indicator */}
+              {question.status && (
+                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                  question.status === 'approved' ? 'bg-green-100 text-green-800' :
+                  question.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                  'bg-amber-100 text-amber-800'
+                }`}>
+                  {question.status === 'approved' ? 'Zatwierdzone' :
+                   question.status === 'rejected' ? 'Odrzucone' : 'Oczekujące'}
+                </span>
+              )}
+              
+              {/* Only show delete button for checked items that are not approved */}
+              {checked && !isEditingDisabled && onDelete && (
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -92,7 +136,8 @@ export function QuestionItem({
             points={question.points} 
             checked={checked} 
             value={value} 
-            onValueChange={onValueChange} 
+            onValueChange={onValueChange}
+            disabled={isEditingDisabled}
           />
         </div>
       </div>
@@ -131,12 +176,14 @@ function QuestionPoints({
   points, 
   checked, 
   value, 
-  onValueChange 
+  onValueChange,
+  disabled = false
 }: { 
   points: number | string, 
   checked: boolean, 
   value: string, 
-  onValueChange: (value: string) => void 
+  onValueChange: (value: string) => void,
+  disabled?: boolean
 }) {
   return (
     <div className="mt-3 flex items-center">
@@ -152,12 +199,13 @@ function QuestionPoints({
             type="number"
             value={value}
             onChange={(e) => onValueChange(e.target.value)}
-            className="w-20 h-8 text-sm text-black rounded-md border-gray-200 focus:border-green-500 focus:ring-1 focus:ring-green-500"
+            className={`w-20 h-8 text-sm text-black rounded-md border-gray-200 
+              ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'focus:border-green-500 focus:ring-1 focus:ring-green-500'}`}
             placeholder="Punkty"
             min={0}
             step={0.5}
+            disabled={disabled}
           />
-         
         </div>
       )}
     </div>
