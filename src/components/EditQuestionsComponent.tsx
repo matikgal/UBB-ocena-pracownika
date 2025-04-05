@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
 import { Plus, Trash, Save, X, Database, ShieldAlert } from 'lucide-react'
 import { useQuestionsManager } from '../hooks/useQuestionsManager'
 import { useAuth } from '../contexts/AuthContext'
+import { toast } from 'sonner'
 
 interface Question {
 	id: string
@@ -52,6 +53,13 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 		addAllQuestionsFromFile,
 	} = useQuestionsManager(selectedCategory)
 
+	// Show toast when error changes
+	useEffect(() => {
+		if (error) {
+			toast.error(error);
+		}
+	}, [error]);
+
 	// If user doesn't have access, show access denied component
 	if (!hasAccess) {
 		return (
@@ -96,22 +104,35 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 	const handleAddQuestion = async () => {
 		if (newQuestion.title.trim() === '') return
 
-		await addNewQuestion(newQuestion, selectedCategory)
-
-		// Resetowanie formularza
-		setNewQuestion({
-			id: '',
-			title: '',
-			points: 0,
-			tooltip: [''],
-		})
+		const result = await addNewQuestion(newQuestion, selectedCategory)
+		if (result) {
+			toast.success('Pytanie zostało dodane pomyślnie');
+			// Resetowanie formularza
+			setNewQuestion({
+				id: '',
+				title: '',
+				points: 0,
+				tooltip: [''],
+			})
+		}
 	}
 
-	// Obsługa aktualizacji pytania
 	const handleUpdateQuestion = async () => {
 		if (!editingQuestion) return
-		await updateExistingQuestion(editingQuestion)
-		setEditingQuestion(null)
+		const result = await updateExistingQuestion(editingQuestion)
+		if (result) {
+			toast.success('Pytanie zostało zaktualizowane pomyślnie');
+			setEditingQuestion(null)
+		}
+	}
+
+	const handleDeleteQuestion = async (id: string) => {
+		if (window.confirm('Czy na pewno chcesz usunąć to pytanie?')) {
+			const result = await deleteExistingQuestion(id)
+			if (result) {
+				toast.success('Pytanie zostało usunięte pomyślnie');
+			}
+		}
 	}
 
 	// Obsługa dodawania nowej podpowiedzi do pytania

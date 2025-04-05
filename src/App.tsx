@@ -1,13 +1,15 @@
 import { BrowserRouter as Router } from 'react-router-dom'
 import AppHeader from './components/AppHeader'
 import QuestionsComponent from './components/questions/QuestionsComponent'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AppSidebar } from './components/AppSideBar'
-import LoginComponent from './components/auth/LoginComponent' // Updated import path
+import LoginComponent from './components/auth/LoginComponent'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { EditQuestionsComponent } from './components/EditQuestionsComponent'
 import { UserManagementComponent } from './components/users/UserManagementComponent'
 import LibraryEvaluationComponent from './components/library/LibraryEvaluationComponent'
+import { Toaster } from 'sonner'
+import { useUserResponses } from './hooks/useUserResponses'
 
 function AppContent() {
 	const [selectedCategory, setSelectedCategory] = useState<string>('Publikacje dydaktyczne')
@@ -15,6 +17,7 @@ function AppContent() {
 	const [isManagingUsers, setIsManagingUsers] = useState<boolean>(false)
 	const [isManagingLibrary, setIsManagingLibrary] = useState<boolean>(false)
 	const { isAuthenticated, isLoading, logout, userData, hasRole } = useAuth()
+	const { loadResponses } = useUserResponses()
 	const canEditQuestions = hasRole('admin') || hasRole('dziekan')
 	// Update this line to match the role name in the database
 	const canManageLibrary = hasRole('admin') || hasRole('library') || hasRole('biblioteka')
@@ -27,6 +30,14 @@ function AppContent() {
 		'Pełnienie funkcji dydaktycznej (za każdy rok)',
 		'Nagrody i wyróznienia',
 	]
+
+	// Load responses when category changes
+	useEffect(() => {
+		if (isAuthenticated && userData?.email && !isEditingQuestions && !isManagingUsers && !isManagingLibrary) {
+			// Force refresh by adding a timestamp parameter
+			loadResponses(`${selectedCategory}?refresh=${new Date().getTime()}`)
+		}
+	}, [selectedCategory, isAuthenticated, userData?.email, isEditingQuestions, isManagingUsers, isManagingLibrary])
 
 	// Show loading state
 	if (isLoading) {
@@ -143,6 +154,7 @@ function AppContent() {
 					</div>
 				</div>
 			</div>
+			<Toaster position="top-right" />
 		</div>
 	)
 }

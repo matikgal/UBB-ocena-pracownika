@@ -3,12 +3,13 @@ import { useAuthentication } from '../hooks/useAuthentication'
 import LoginComponent from './auth/LoginComponent'
 import CategoryLayout from './category/CategoryLayout'
 import { categories } from '../utils/categoryUtils'
+import { Toaster } from './ui/sonner'
 
 export default function AppLayout() {
-	const { isLoggedIn, login, logout } = useAuthentication()
+	const { isLoggedIn, logout } = useAuthentication()
 
 	if (!isLoggedIn) {
-		return <LoginComponent onLogin={login} />
+		return <LoginComponent />
 	}
 
 	return (
@@ -28,6 +29,7 @@ export default function AppLayout() {
 					/>
 				</Routes>
 			</div>
+			<Toaster />
 		</div>
 	)
 }

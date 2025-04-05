@@ -3,6 +3,7 @@ import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '../../firebase'
 import { useUserResponses } from './useUserResponses'
 import { useAuth } from '../contexts/AuthContext'
+import { toast } from 'sonner'
 
 interface Question {
   id: string
@@ -47,8 +48,9 @@ export function useQuestions(selectedCategory: string) {
         await fetchQuestions();
         
         if (userData?.email) {
-          // Then load responses
-          await loadResponses(selectedCategory);
+          // Always force refresh responses when category changes by adding timestamp
+          // This ensures we bypass any caching mechanism in useUserResponses
+          await loadResponses(`${selectedCategory}?refresh=${new Date().getTime()}`);
         }
       } catch (err) {
         console.error('Error loading data:', err);
@@ -122,6 +124,9 @@ export function useQuestions(selectedCategory: string) {
   
       if (existingResponse) {
         question.status = existingResponse.status;
+      } else {
+        // Reset status if no existing response is found
+        question.status = undefined;
       }
   
       initialStates[question.id] = {
@@ -139,14 +144,54 @@ export function useQuestions(selectedCategory: string) {
   }
 
   const handleCheckboxChange = (questionId: string) => {
+    // Get the current state before updating
+    const isCurrentlyChecked = questionStates[questionId]?.checked;
+    
+    // Update the question state
     setQuestionStates(prev => ({
       ...prev,
       [questionId]: {
         ...prev[questionId],
-        checked: !prev[questionId]?.checked,
+        checked: !isCurrentlyChecked,
       },
-    }))
-  }
+    }));
+  
+    // If it's being checked, we'll save it when the user clicks save
+    // or when they change categories (already implemented in saveResponsesAutomatically)
+  };
+
+  // Modify the saveResponsesAutomatically function to be more robust
+  const saveResponsesAutomatically = async () => {
+    if (!userData || !userData.email) return;
+    
+    try {
+      // Get all checked questions
+      const checkedQuestions = Object.entries(questionStates)
+        .filter(([_, state]) => state.checked)
+        .map(([id, state]) => ({
+          id,
+          // Replace commas with dots before parsing to handle different number formats
+          points: parseFloat(state.value.replace(',', '.')),
+        }));
+  
+      if (checkedQuestions.length === 0) return;
+  
+      // Save each response
+      for (const item of checkedQuestions) {
+        const question = questions.find(q => q.id === item.id);
+        if (question) {
+          // Skip questions with approved status
+          if (question.status === 'approved') {
+            continue;
+          }
+          await saveResponse(question.id, question.title, item.points, previousCategoryRef.current, question.status);
+        }
+      }
+      console.log('Responses auto-saved successfully');
+    } catch (err) {
+      console.error('Error auto-saving responses:', err);
+    }
+  };
 
   const handleValueChange = (questionId: string, value: string) => {
     setQuestionStates(prev => ({
@@ -159,14 +204,29 @@ export function useQuestions(selectedCategory: string) {
   }
 
   // Add function to save responses
+  // Show toast when error changes
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+      // Clear error after showing toast
+      setTimeout(() => setError(null), 100);
+    }
+  }, [error]);
+
+  // Show toast when success message changes
+  useEffect(() => {
+    if (successMessage) {
+      toast.success(successMessage);
+      // Clear success message after showing toast
+      setTimeout(() => setSuccessMessage(null), 100);
+    }
+  }, [successMessage]);
+
   const handleSaveResponses = async () => {
     if (!userData?.email) {
-      setError('Musisz być zalogowany, aby zapisać odpowiedzi');
+      toast.error('Musisz być zalogowany, aby zapisać odpowiedzi');
       return;
     }
-  
-    setError(null);
-    setSuccessMessage(null);
   
     try {
       // Get all checked questions
@@ -179,7 +239,7 @@ export function useQuestions(selectedCategory: string) {
         }));
   
       if (checkedQuestions.length === 0) {
-        setError('Nie wybrano żadnych pytań');
+        toast.error('Nie wybrano żadnych pytań');
         return;
       }
   
@@ -195,94 +255,64 @@ export function useQuestions(selectedCategory: string) {
         }
       }
   
-      setSuccessMessage('Odpowiedzi zostały zapisane');
-  
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage(null);
-      }, 3000);
+      // Show success toast
+      const hasUncheckedResponses = Object.entries(questionStates).some(([_, state]) => !state.checked);
+      toast.success(
+        hasUncheckedResponses
+          ? 'Odpowiedzi zostały zapisane, a odznaczone pytania usunięte' 
+          : 'Odpowiedzi zostały zapisane'
+      );
     } catch (err) {
       console.error('Error saving responses:', err);
-      setError('Nie udało się zapisać odpowiedzi');
+      toast.error('Nie udało się zapisać odpowiedzi');
     }
-  }
+  };
 
-  // Add function to delete a response
   const handleDeleteResponse = async (questionId: string) => {
     if (!userData?.email) {
-      setError('Musisz być zalogowany, aby usunąć odpowiedź')
-      return false
+      toast.error('Musisz być zalogowany, aby usunąć odpowiedź');
+      return false;
     }
-
-    setError(null)
-    setSuccessMessage(null)
-
+  
     try {
       // Find the response for this question
-      const existingResponse = responses.find(r => r.questionId === questionId)
+      const existingResponse = responses.find(r => r.questionId === questionId);
       
-      if (!existingResponse || !existingResponse.id) {
-        setError('Nie znaleziono odpowiedzi do usunięcia')
-        return false
+      if (existingResponse && existingResponse.id) {
+        // Delete the response but don't change the checkbox state
+        await deleteResponse(existingResponse.id);
+        
+        // Set success message
+        setSuccessMessage('Odpowiedź została usunięta');
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+          setSuccessMessage(null);
+        }, 3000);
+        
+        // Important: Don't modify the checkbox state here
+        // We're removing this line:
+        // setQuestionStates(prev => ({
+        //   ...prev,
+        //   [questionId]: {
+        //     ...prev[questionId],
+        //     checked: false,
+        //   },
+        // }));
       }
-
-      // Delete the response
-      await deleteResponse(existingResponse.id)
-
-      // Update question state to uncheck the deleted question
-      setQuestionStates(prev => ({
-        ...prev,
-        [questionId]: {
-          ...prev[questionId],
-          checked: false,
-        },
-      }))
-
-      setSuccessMessage('Odpowiedź została usunięta')
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage(null)
-      }, 3000)
-
-      return true
     } catch (err) {
-      console.error('Error deleting response:', err)
-      setError('Nie udało się usunąć odpowiedzi')
-      return false
+      console.error('Error deleting response:', err);
+      setError('Nie udało się usunąć odpowiedzi');
+      
+      // Clear error after 3 seconds
+      setTimeout(() => {
+        setError(null);
+      }, 3000);
     }
-  }
+  };
 
   // Add a ref to track the previous category
   const previousCategoryRef = useRef<string>(selectedCategory);
-  
-  // Add a function to save responses automatically
-  const saveResponsesAutomatically = async () => {
-    if (!userData?.email) return;
-  
-    // Get all checked questions
-    const checkedQuestions = Object.entries(questionStates)
-      .filter(([_, state]) => state.checked)
-      .map(([id, state]) => ({
-        id,
-        points: parseInt(state.value),
-      }));
-  
-    if (checkedQuestions.length === 0) return;
-  
-    try {
-      // Save each response
-      for (const item of checkedQuestions) {
-        const question = questions.find(q => q.id === item.id);
-        if (question) {
-          await saveResponse(question.id, question.title, item.points, previousCategoryRef.current);
-        }
-      }
-      console.log('Responses auto-saved successfully');
-    } catch (err) {
-      console.error('Error auto-saving responses:', err);
-    }
-  };
   
   // Add effect to handle category changes
   useEffect(() => {
@@ -290,6 +320,19 @@ export function useQuestions(selectedCategory: string) {
     if (previousCategoryRef.current !== selectedCategory && previousCategoryRef.current) {
       // Save responses for the previous category
       saveResponsesAutomatically();
+      
+      // Also handle unchecked questions by removing their responses
+      const uncheckedQuestions = Object.entries(questionStates)
+        .filter(([_, state]) => !state.checked)
+        .map(([id]) => id);
+        
+      // Delete responses for unchecked questions
+      uncheckedQuestions.forEach(questionId => {
+        const existingResponse = responses.find(r => r.questionId === questionId);
+        if (existingResponse && existingResponse.id) {
+          deleteResponse(existingResponse.id);
+        }
+      });
     }
     
     // Update the ref with current category

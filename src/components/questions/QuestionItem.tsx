@@ -35,8 +35,7 @@ export function QuestionItem({
   
   // Determine border and background color based on status
   const getBorderAndBgColor = () => {
-    if (!checked) return 'border-gray-200 bg-white';
-    
+    // Always check status first, regardless of checked state
     if (question.status) {
       switch (question.status) {
         case 'approved':
@@ -48,7 +47,13 @@ export function QuestionItem({
       }
     }
     
-    return 'border-blue-500 bg-blue-50';
+    // If no status but checked
+    if (checked) {
+      return 'border-blue-500 bg-blue-50';
+    }
+    
+    // Default state
+    return 'border-gray-200 bg-white';
   };
 
   // Determine if editing is disabled (when approved)
@@ -57,6 +62,9 @@ export function QuestionItem({
   // Check if this is the library-evaluated question
   const isLibraryQuestion = question.isLibraryEvaluated || 
     question.title === "Autorstwo artykułu/monografii (dotyczy pracowników dydaktycznych)";
+
+  // Determine if checkbox should be checked
+  const isChecked = question.status === 'approved' || question.status === 'pending' || checked;
 
   return (
     <div 
@@ -80,7 +88,7 @@ export function QuestionItem({
       <div className="flex items-start gap-4 ">
         <Checkbox 
           id={`question-${question.id}`} 
-          checked={question.status === 'approved' ? true : checked}
+          checked={isChecked}
           onCheckedChange={() => !isEditingDisabled && onCheckChange()}
           className="mt-1 cursor-pointer"
           disabled={isEditingDisabled}
@@ -90,150 +98,88 @@ export function QuestionItem({
         />
         
         <div className="flex-1">
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between text-black">
             <label 
               htmlFor={`question-${question.id}`}
-              className={`text-sm font-medium leading-tight ${isEditingDisabled ? 'cursor-default' : 'cursor-pointer'} transition-colors ${
-                question.status === 'approved' ? 'text-green-700' : 
-                question.status === 'rejected' ? 'text-red-700' :
-                question.status === 'pending' ? 'text-amber-700' :
-                checked ? 'text-green-700' : 'text-gray-800'
-              }`}
+              className={`text-sm font-medium leading-tight cursor-pointer ${isEditingDisabled ? 'cursor-default' : ''}`}
             >
               {question.title}
+              
+              {/* Show library icon for library-evaluated questions */}
               {isLibraryQuestion && (
-                <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
-                  Oceniane przez bibliotekę
+                <span className="ml-2 inline-flex items-center">
+                  <BookOpen className="h-4 w-4 text-blue-600" />
+                </span>
+              )}
+              
+              {/* Show status badges */}
+              {question.status && (
+                <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                  ${question.status === 'approved' ? 'bg-green-100 text-green-800' : 
+                    question.status === 'rejected' ? 'bg-red-100 text-red-800' : 
+                    'bg-amber-100 text-amber-800'}`}>
+                  {question.status === 'approved' ? 'Zatwierdzone' : 
+                   question.status === 'rejected' ? 'Odrzucone' : 'Oczekujące'}
                 </span>
               )}
             </label>
             
-            <div className="flex items-center gap-2">
-              <QuestionTooltip tooltip={question.tooltip} />
-              
-              {/* Library icon for library-evaluated questions */}
-              {isLibraryQuestion && (
-                <span className="text-blue-500">
-                  <BookOpen className="h-4 w-4" />
-                </span>
-              )}
-              
-              {/* Status indicator */}
-              {question.status && (
-                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                  question.status === 'approved' ? 'bg-green-100 text-green-800' :
-                  question.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                  'bg-amber-100 text-amber-800'
-                }`}>
-                  {question.status === 'approved' ? 'Zatwierdzone' :
-                   question.status === 'rejected' ? 'Odrzucone' : 'Oczekujące'}
-                </span>
-              )}
-              
-              {/* Only show delete button for checked items that are not approved */}
-              {checked && !isEditingDisabled && onDelete && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(question.id);
-                  }}
-                  className="text-red-500 hover:text-red-700 hover:bg-red-50 p-0 h-6 w-6"
-                >
-                  <Trash className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
+            {/* Tooltip */}
+            {question.tooltip && question.tooltip.length > 0 && question.tooltip[0] !== '' && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="cursor-help" onClick={(e) => e.stopPropagation()}>
+                      <GoInfo className="h-4 w-4 text-blue-500" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-sm bg-white p-3 shadow-lg rounded-lg border border-gray-200">
+                    <div className="text-sm text-gray-700">
+                      {question.tooltip.map((tip, index) => (
+                        <p key={index} className="mb-1">{tip}</p>
+                      ))}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
           
-          <QuestionPoints 
-            points={question.points} 
-            checked={checked} 
-            value={value} 
-            onValueChange={onValueChange}
-            disabled={isEditingDisabled}
-            isLibraryEvaluated={isLibraryQuestion}
-          />
+          {/* Points input */}
+          <div className="mt-2 flex items-center justify-between">
+            <div className="flex items-center">
+              <Input
+                type="number"
+                value={value}
+                onChange={(e) => onValueChange(e.target.value)}
+                className="w-20 h-8 text-sm text-black"
+                disabled={isEditingDisabled || isLibraryQuestion}
+                onClick={(e) => e.stopPropagation()}
+                min="0"
+                step={0.5}
+              />
+              <span className="ml-2 text-sm text-gray-600">punktów</span>
+            </div>
+            
+            {/* Delete button - show for all responses except approved ones */}
+            {question.status !== 'approved' && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-black hover:text-red-600 hover:bg-red-50"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onDelete) {
+                    onDelete(question.id);
+                  }
+                }}
+              >
+                <Trash className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>
   )
-}
-
-function QuestionTooltip({ tooltip }: { tooltip: string[] }) {
-  if (!tooltip || tooltip.length === 0) return null;
-  
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger className="inline-flex cursor-help">
-          <GoInfo className="text-gray-400 hover:text-gray-600 transition-colors" />
-        </TooltipTrigger>
-        <TooltipContent 
-          side="left" 
-          align="start" 
-          className="max-w-[200px] bg-white shadow-lg p-3 rounded-md z-50 border border-gray-200"
-          sideOffset={5}
-         
-        >
-          <ul className="list-disc pl-4 text-xs space-y-1.5 text-gray-800">
-            {tooltip.map((tip, index) => (
-              <li key={index}>{tip}</li>
-            ))}
-          </ul>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-}
-
-function QuestionPoints({ 
-  points, 
-  checked, 
-  value, 
-  onValueChange,
-  disabled = false,
-  isLibraryEvaluated = false
-}: { 
-  points: number | string, 
-  checked: boolean, 
-  value: string, 
-  onValueChange: (value: string) => void,
-  disabled?: boolean,
-  isLibraryEvaluated?: boolean
-}) {
-  return (
-    <div className="mt-3 flex items-center">
-      <span className="text-sm text-gray-600 mr-3 font-medium">
-        {typeof points === 'number' 
-          ? `${points} pkt` 
-          : points}
-      </span>
-      
-      {checked && (
-        <div className="flex items-center gap-2">
-          {isLibraryEvaluated ? (
-            <div className="text-sm text-blue-600">
-              {value === '0' ? 
-                'Oczekuje na ocenę biblioteki' : 
-                `Przyznane punkty: ${value}`}
-            </div>
-          ) : (
-            <Input
-              type="number"
-              value={value}
-              onChange={(e) => onValueChange(e.target.value)}
-              className={`w-20 h-8 text-sm text-black rounded-md border-gray-200 
-                ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'focus:border-green-500 focus:ring-1 focus:ring-green-500'}`}
-              placeholder="Punkty"
-              min={0}
-              step={0.5}
-              disabled={disabled}
-            />
-          )}
-        </div>
-      )}
-    </div>
-  );
 }

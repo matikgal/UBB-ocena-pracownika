@@ -1,8 +1,10 @@
-import { BookOpen, LogOut, Edit, Users } from 'lucide-react'
+import { BookOpen, LogOut, Edit, Users, RefreshCw } from 'lucide-react'
 import logo from '../assets/Logo.svg'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar'
 import { Button } from '../components/ui/button'
 import { useAuth } from '../contexts/AuthContext'
+import { useUserResponses } from '../hooks/useUserResponses'
+import { toast } from 'sonner'
 
 import {
 	publikacjeDydaktyczne,
@@ -65,23 +67,33 @@ export function AppSidebar({
 	onManageLibrary = () => {},
 }: AppSidebarProps) {
 	const { hasRole } = useAuth()
+	const { loadResponses } = useUserResponses()
 	const canEditQuestions = hasRole('admin') || hasRole('dziekan')
 	const canManageLibrary = hasRole('admin') || hasRole('biblioteka') || hasRole('library')
 
-	console.log(
-		'User has library access:',
-		canManageLibrary,
-		'Admin:',
-		hasRole('admin'),
-		'Biblioteka:',
-		hasRole('biblioteka'),
-		'Library:',
-		hasRole('library')
-	)
+	// Function to handle category selection with response refresh
+	const handleCategorySelect = (category: string) => {
+		setSelectedCategory(category)
+		// Force refresh responses when changing category
+		loadResponses(`${category}?refresh=${new Date().getTime()}`)
+	}
+
+	// Function to handle manual refresh of responses and questions
+	const handleRefreshResponses = () => {
+		// Force refresh responses for the current category
+		loadResponses(`${selectedCategory}?refresh=${new Date().getTime()}`)
+		
+		// Dispatch a custom event to notify components to refresh questions
+		const refreshEvent = new CustomEvent('refreshQuestions', { 
+			detail: { category: selectedCategory } 
+		})
+		window.dispatchEvent(refreshEvent)
+		
+		toast.success('Odświeżono pytania i odpowiedzi')
+	}
 
 	// Function to handle library management
 	const handleLibraryManagement = () => {
-		console.log('Library management button clicked')
 		// Force the function call even if it's undefined
 		if (typeof onManageLibrary === 'function') {
 			onManageLibrary()
@@ -97,14 +109,25 @@ export function AppSidebar({
 			</div>
 
 			<div className="flex-1 overflow-auto px-4 py-5">
-				<h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-3 ml-2">Kategorie</h2>
+				<div className="flex justify-between items-center mb-3">
+					<h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider ml-2">Kategorie</h2>
+					<Button
+						variant="outline"
+						size="sm"
+						className="flex items-center text-gray-600 hover:text-blue-700"
+						onClick={handleRefreshResponses}
+					>
+						<RefreshCw className="h-3.5 w-3.5 mr-1" />
+						Odśwież
+					</Button>
+				</div>
 				<nav className="space-y-1.5">
 					{categories.map(category => {
 						const Icon = category.icon
 						return (
 							<button
 								key={category.title}
-								onClick={() => setSelectedCategory(category.title)}
+								onClick={() => handleCategorySelect(category.title)}
 								className={`w-full cursor-pointer flex items-start px-4 py-2.5 text-sm font-medium rounded-lg transition-all ${
 									selectedCategory === category.title
 										? 'bg-blue-100 text-blue-800 shadow-sm'

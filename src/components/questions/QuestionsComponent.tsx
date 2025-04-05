@@ -2,9 +2,10 @@ import { useQuestions } from '../../hooks/useQuestions'
 import { Button } from '../ui/button'
 import { QuestionItem } from './QuestionItem' // Changed from default to named import
 import LoadingState from './ui/LoadingState'
-import ErrorState from './ui/ErrorState'
 import EmptyState from './ui/EmptyState'
 import CategoryNavigation from './ui/CategoryNavigation'
+import { toast } from 'sonner'
+import { useEffect } from 'react'
 
 interface QuestionsComponentProps {
 	selectedCategory: string
@@ -17,7 +18,7 @@ export default function QuestionsComponent({
 	selectedCategory,
 	onPreviousCategory,
 	onNextCategory,
-	categories,
+	categories
 }: QuestionsComponentProps) {
 	const {
 		questions,
@@ -28,8 +29,22 @@ export default function QuestionsComponent({
 		handleCheckboxChange,
 		handleValueChange,
 		handleSaveResponses,
-		handleDeleteResponse, // Add the new function
+		handleDeleteResponse 
 	} = useQuestions(selectedCategory)
+
+	// Show toast when success message changes
+	useEffect(() => {
+		if (successMessage) {
+			toast.success(successMessage);
+		}
+	}, [successMessage]);
+
+	// Show toast when error changes
+	useEffect(() => {
+		if (error) {
+			toast.error(error);
+		}
+	}, [error]);
 
 	// Determine if this is the first or last category
 	const currentIndex = categories.indexOf(selectedCategory)
@@ -40,11 +55,9 @@ export default function QuestionsComponent({
 		return <LoadingState />
 	}
 
-	if (error) {
-		return <ErrorState message={error} />
-	}
-
 	if (questions.length === 0) {
+		// Show toast for empty state and still render the EmptyState component
+		toast.info(`Brak pytań w kategorii: ${selectedCategory}`);
 		return <EmptyState category={selectedCategory} />
 	}
 
@@ -69,18 +82,15 @@ export default function QuestionsComponent({
 							checked={questionStates[question.id]?.checked || false}
 							value={questionStates[question.id]?.value || '0'}
 							onCheckChange={() => handleCheckboxChange(question.id)}
-							onValueChange={value => handleValueChange(question.id, value)}
-							onDelete={handleDeleteResponse} // Pass the delete handler
+							onValueChange={(value) => handleValueChange(question.id, value)}
+							onDelete={handleDeleteResponse}
 						/>
 					))}
 				</div>
 			</div>
 
 			<div className="mt-6 pt-4 border-t border-gray-200">
-				{successMessage && (
-					<div className="mb-4 p-3 bg-green-50 text-green-700 rounded-md border border-green-100">{successMessage}</div>
-				)}
-				<Button onClick={handleSaveResponses} className="w-full bg-ubbprimary hover:bg-ubbprimary/90">
+				<Button onClick={handleSaveResponses} className="w-full">
 					Zapisz odpowiedzi
 				</Button>
 			</div>

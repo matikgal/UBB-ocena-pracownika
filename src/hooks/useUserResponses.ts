@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { collection, addDoc, updateDoc, doc, deleteDoc, getDocs, query, where, setDoc } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, deleteDoc, getDocs, query, where, setDoc, getDoc, orderBy } from 'firebase/firestore';
 import { db } from '../../firebase';
 
 export interface UserResponse {
@@ -14,7 +14,7 @@ export interface UserResponse {
   status?: 'pending' | 'approved' | 'rejected'; // New status field
   verifiedBy?: string; // Track who verified the response
   verifiedAt?: Date; // When it was verified
-  rejectionReason?: string; // Optional reason for rejection
+  rejectionReason?: string | null; // Optional reason for rejection - add null to the type
 }
 
 export function useUserResponses() {
@@ -34,20 +34,30 @@ export function useUserResponses() {
     }
   
     try {
-      // Prevent duplicate fetches for the same category
-      if (category && loadingRef.current[category]) {
-        return responsesByCategory[category] || [];
+      // Check if this is a refresh request (category contains '?refresh=')
+      const isRefreshRequest = category && category.includes('?refresh=');
+      
+      // Extract the actual category name if it's a refresh request
+      const actualCategory = isRefreshRequest 
+        ? category.split('?')[0] 
+        : category;
+      
+      // Prevent duplicate fetches for the same category (unless it's a refresh request)
+      if (!isRefreshRequest && actualCategory && loadingRef.current[actualCategory]) {
+        console.log(`Using in-progress fetch for category: ${actualCategory}`);
+        return responsesByCategory[actualCategory] || [];
       }
       
-      // Check if we already have responses for this category cached
-      if (category && responsesByCategory[category] && responsesByCategory[category].length > 0) {
-        setResponses(responsesByCategory[category]);
-        return responsesByCategory[category];
+      // Use cache only if it's not a refresh request
+      if (!isRefreshRequest && actualCategory && responsesByCategory[actualCategory] && responsesByCategory[actualCategory].length > 0) {
+        console.log(`Using cached responses for category: ${actualCategory}, count: ${responsesByCategory[actualCategory].length}`);
+        setResponses(responsesByCategory[actualCategory]);
+        return responsesByCategory[actualCategory];
       }
 
       // Mark this category as loading
-      if (category) {
-        loadingRef.current[category] = true;
+      if (actualCategory) {
+        loadingRef.current[actualCategory] = true;
       }
       
       setLoading(true);
@@ -57,12 +67,14 @@ export function useUserResponses() {
       const responsesCollectionRef = collection(db, 'Users', userEmail, 'responses');
       
       let q;
-      if (category) {
+      if (actualCategory) {
+        // Fix: Use only where clause without orderBy which might cause issues
         q = query(
           responsesCollectionRef,
-          where('category', '==', category)
+          where('category', '==', actualCategory)
         );
       } else {
+        // Fix: Remove orderBy to avoid potential index issues
         q = query(responsesCollectionRef);
       }
       
@@ -71,32 +83,52 @@ export function useUserResponses() {
   
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+        // Fix: Handle potential missing or invalid date fields
+        const createdAt = data.createdAt ? 
+          (data.createdAt instanceof Date ? data.createdAt : data.createdAt.toDate()) : 
+          undefined;
+        const updatedAt = data.updatedAt ? 
+          (data.updatedAt instanceof Date ? data.updatedAt : data.updatedAt.toDate()) : 
+          undefined;
+        const verifiedAt = data.verifiedAt ? 
+          (data.verifiedAt instanceof Date ? data.verifiedAt : data.verifiedAt.toDate()) : 
+          undefined;
+          
         fetchedResponses.push({
           id: doc.id,
           questionId: data.questionId,
           questionTitle: data.questionTitle,
           points: data.points,
           category: data.category,
-          createdAt: data.createdAt?.toDate(),
-          updatedAt: data.updatedAt?.toDate(),
-          status: data.status, // Only use the status from the database, no default
+          createdAt: createdAt,
+          updatedAt: updatedAt,
+          status: data.status || 'pending',
           verifiedBy: data.verifiedBy,
-          verifiedAt: data.verifiedAt?.toDate(),
+          verifiedAt: verifiedAt,
           rejectionReason: data.rejectionReason
         } as UserResponse);
       });
       
-      setResponses(fetchedResponses);
+      console.log(`Fetched ${fetchedResponses.length} responses for category: ${actualCategory || 'all'}`);
       
-      // Update cache
-      if (category) {
+      // Fix: Sort responses by createdAt date if available (client-side sorting)
+      const sortedResponses = fetchedResponses.sort((a, b) => {
+        if (!a.createdAt) return 1;
+        if (!b.createdAt) return -1;
+        return b.createdAt.getTime() - a.createdAt.getTime();
+      });
+      
+      setResponses(sortedResponses);
+      
+      // Update cache with fresh data
+      if (actualCategory) {
         setResponsesByCategory(prev => ({
           ...prev,
-          [category]: fetchedResponses
+          [actualCategory]: sortedResponses
         }));
       }
       
-      return fetchedResponses;
+      return sortedResponses;
     } catch (err) {
       console.error('Error loading responses:', err);
       setError('Nie udało się pobrać odpowiedzi');
@@ -105,7 +137,12 @@ export function useUserResponses() {
       setLoading(false);
       // Mark this category as no longer loading
       if (category) {
-        loadingRef.current[category] = false;
+        const actualCategory = category && category.includes('?refresh=') 
+          ? category.split('?')[0] 
+          : category;
+        if (actualCategory) {
+          loadingRef.current[actualCategory] = false;
+        }
       }
     }
   };
@@ -169,6 +206,7 @@ export function useUserResponses() {
           points,
           category,
           createdAt: new Date(),
+          updatedAt: new Date(),
           status: 'pending' // Set initial status to pending
         };
         
@@ -176,8 +214,8 @@ export function useUserResponses() {
         responseId = docRef.id;
       }
       
-      // Update local state by reloading responses for this category
-      await loadResponses(category);
+      // Force refresh responses for this category to update the cache
+      await loadResponses(`${category}?refresh=${new Date().getTime()}`);
       
       return responseId;
     } catch (err) {
@@ -200,10 +238,29 @@ export function useUserResponses() {
       setLoading(true);
       setError(null);
       
-      await deleteDoc(doc(db, 'Users', userData.email, 'responses', responseId));
+      const userEmail = userData.email;
+      
+      // Get the response before deleting to know which category to refresh
+      const responseDoc = await getDoc(doc(db, 'Users', userEmail, 'responses', responseId));
+      
+      if (!responseDoc.exists()) {
+        setError('Response not found');
+        return false;
+      }
+      
+      const responseData = responseDoc.data();
+      const category = responseData.category;
+      
+      await deleteDoc(doc(db, 'Users', userEmail, 'responses', responseId));
       
       // Update local state
       setResponses(prev => prev.filter(r => r.id !== responseId));
+      
+      // Force refresh responses for this category to update the cache
+      if (category) {
+        await loadResponses(`${category}?refresh=${new Date().getTime()}`);
+      }
+      
       return true;
     } catch (err) {
       console.error('Error deleting response:', err);
@@ -214,8 +271,6 @@ export function useUserResponses() {
     }
   };
 
-  // Add these functions before the return statement in useUserResponses
-  
   // Verify a user response (approve or reject)
   const verifyResponse = async (
     userEmail: string, 
@@ -261,7 +316,7 @@ export function useUserResponses() {
               verifiedBy: verifierEmail,
               verifiedAt: new Date(),
               // Use null instead of undefined
-              rejectionReason: status === 'rejected' ? (rejectionReason || undefined) : undefined
+              rejectionReason: status === 'rejected' ? (rejectionReason || null) : null
             };
             return updatedResponse;
           }
@@ -287,6 +342,6 @@ export function useUserResponses() {
     saveResponse,
     loadResponses,
     deleteResponse,
-    verifyResponse // Add the new function
+    verifyResponse
   };
 }

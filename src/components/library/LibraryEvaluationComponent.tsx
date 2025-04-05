@@ -5,6 +5,7 @@ import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { useAuth } from '../../contexts/AuthContext'
 import { ShieldAlert } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface UserResponse {
 	id: string
@@ -372,4 +373,18 @@ export default function LibraryEvaluationComponent() {
 			</div>
 		</div>
 	)
+
+	// Show toast when success message changes
+	useEffect(() => {
+		if (successMessage) {
+			toast.success(successMessage);
+		}
+	}, [successMessage]);
+
+	// Show toast when error changes
+	useEffect(() => {
+		if (error) {
+			toast.error(error);
+		}
+	}, [error]);
 }

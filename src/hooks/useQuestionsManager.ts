@@ -41,7 +41,7 @@ export function useQuestionsManager(initialCategory: string) {
 
   // Add a new question
   const addNewQuestion = async (question: Question, category: string) => {
-    if (question.title.trim() === '') return
+    if (question.title.trim() === '') return null
 
     try {
       const questionToAdd = {
