@@ -318,8 +318,8 @@ export function useQuestions(selectedCategory: string) {
   useEffect(() => {
     // If this is not the initial render and category has changed
     if (previousCategoryRef.current !== selectedCategory && previousCategoryRef.current) {
-      // Save responses for the previous category
-      saveResponsesAutomatically();
+      // We'll skip the automatic save here since it will be handled by the event listener
+      // saveResponsesAutomatically(); <- Comment this out or remove it
       
       // Also handle unchecked questions by removing their responses
       const uncheckedQuestions = Object.entries(questionStates)
@@ -339,26 +339,21 @@ export function useQuestions(selectedCategory: string) {
     previousCategoryRef.current = selectedCategory;
   }, [selectedCategory]);
   
-  // Add effect to handle page unload
+  // Add this effect to listen for the saveResponses event
   useEffect(() => {
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      // Trigger save
-      saveResponsesAutomatically();
-      
-      // Show confirmation dialog
-      event.preventDefault();
-      event.returnValue = 'Czy na pewno chcesz opuścić stronę? Twoje odpowiedzi zostaną zapisane.';
-      return event.returnValue;
+    const handleSaveEvent = (event: CustomEvent) => {
+      // Call the same function that's used by the Save button
+      handleSaveResponses();
     };
   
     // Add event listener
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('saveResponses', handleSaveEvent as EventListener);
   
     // Cleanup
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('saveResponses', handleSaveEvent as EventListener);
     };
-  }, [questionStates, questions, userData?.email]);
+  }, [questionStates, questions, userData?.email]); // Add dependencies that handleSaveResponses uses
 
   return {
     questions,

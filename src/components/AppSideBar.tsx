@@ -72,10 +72,19 @@ export function AppSidebar({
 	const canManageLibrary = hasRole('admin') || hasRole('biblioteka') || hasRole('library')
 
 	// Function to handle category selection with response refresh
+	// Modify the handleCategorySelect function to also save responses
 	const handleCategorySelect = (category: string) => {
-		setSelectedCategory(category)
-		// Force refresh responses when changing category
-		loadResponses(`${category}?refresh=${new Date().getTime()}`)
+	// First, dispatch a custom event to save responses
+	const saveEvent = new CustomEvent('saveResponses', { 
+	detail: { fromCategory: selectedCategory, toCategory: category } 
+	});
+	window.dispatchEvent(saveEvent);
+	
+	// Then set the selected category
+	setSelectedCategory(category);
+	
+	// Force refresh responses when changing category
+	loadResponses(`${category}?refresh=${new Date().getTime()}`);
 	}
 
 	// Function to handle manual refresh of responses and questions
