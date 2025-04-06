@@ -1,18 +1,15 @@
 import { BookOpen, LogOut, Edit, Users, RefreshCw } from 'lucide-react'
-import logo from '../assets/Logo.svg'
-import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar'
-import { Button } from '../components/ui/button'
-import { useAuth } from '../contexts/AuthContext'
-import { useUserResponses } from '../hooks/useUserResponses'
+import logo from '../../assets/Logo.svg'
+
+
 import { toast } from 'sonner'
 
-import {
-	publikacjeDydaktyczne,
-	podniesienieJakosciNauczania,
-	zajeciaJezykObcy,
-	funkcjeDydaktyczne,
-	nagrodyWyroznienia,
-} from '../lib/questions'
+
+import { useAuth } from '../../contexts/AuthContext'
+import { Button } from '../ui/button'
+import { useUserResponses } from '../../hooks/useUserResponses'
+import { Avatar, AvatarImage, AvatarFallback } from '@radix-ui/react-avatar'
+import { funkcjeDydaktyczne, nagrodyWyroznienia, podniesienieJakosciNauczania, publikacjeDydaktyczne, zajeciaJezykObcy } from '../../lib/questions'
 
 interface MenuItem {
 	title: string

@@ -1,8 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { AppSidebar } from '../AppSideBar'
-import AppHeader from '../AppHeader'
 import CategoryContent from './CategoryContent.tsx'
 import { categoryToSlug, slugToCategory } from '../../utils/categoryUtils'
+import { AppSidebar } from '../../components/layout/Sidebar.tsx'
+import Header from '../../components/layout/Header.tsx'
 
 interface CategoryLayoutProps {
   categories: string[];
@@ -45,7 +45,7 @@ export default function CategoryLayout({ categories, onLogout, userData }: Categ
       />
       <div className="flex-1 flex flex-col pl-8 pr-4 pt-2">
         <div className="mb-4">
-          <AppHeader />
+          <Header />
         </div>
         <main className="flex-1 overflow-hidden pb-4">
           <CategoryContent

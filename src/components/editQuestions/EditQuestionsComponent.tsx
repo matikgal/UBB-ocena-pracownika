@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
-import { Button } from './ui/button'
-import { Input } from './ui/input'
-import { Textarea } from './ui/textarea'
-import { Plus, Trash, Save, X, Database, ShieldAlert } from 'lucide-react'
-import { useQuestionsManager } from '../hooks/useQuestionsManager'
-import { useAuth } from '../contexts/AuthContext'
-import { toast } from 'sonner'
+import { Button } from "../../components/ui/button"
+import { Input } from "../../components/ui/input"
+import { Textarea } from "../../components/ui/textarea"
+import { useAuth } from "../../contexts/AuthContext"
+import { useQuestionsManager } from "../../hooks/useQuestionsManager"
+import { X, ShieldAlert, Trash, Plus, Database, Save } from "lucide-react"
+import { useState, useEffect } from "react"
+import { toast } from "sonner"
 
 interface Question {
 	id: string

@@ -1,9 +1,9 @@
 import { useQuestions } from '../../hooks/useQuestions'
 import { Button } from '../ui/button'
 import { QuestionItem } from './QuestionItem' // Changed from default to named import
-import LoadingState from './ui/LoadingState'
-import EmptyState from './ui/EmptyState'
-import CategoryNavigation from './ui/CategoryNavigation'
+import LoadingState from './components/LoadingState'
+import EmptyState from './components/EmptyState'
+import CategoryNavigation from './components/CategoryNavigation'
 import { toast } from 'sonner'
 import { useEffect } from 'react'
 

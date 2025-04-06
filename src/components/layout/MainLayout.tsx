@@ -1,9 +1,10 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
-import { useAuthentication } from '../hooks/useAuthentication'
-import LoginComponent from './auth/LoginComponent'
-import CategoryLayout from './category/CategoryLayout'
-import { categories } from '../utils/categoryUtils'
-import { Toaster } from './ui/sonner'
+import LoginComponent from "../auth/LoginComponent"
+import CategoryLayout from "../category/CategoryLayout"
+import { useAuthentication } from "../../hooks/useAuthentication"
+import { categories } from "../../utils/categoryUtils"
+import { Route } from "react-router-dom"  
+import { Routes, Navigate } from "react-router-dom"
+import { Toaster } from "sonner"
 
 export default function AppLayout() {
 	const { isLoggedIn, logout } = useAuthentication()

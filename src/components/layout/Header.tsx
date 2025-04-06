@@ -1,10 +1,9 @@
-// src/components/AppHeader.tsx
-// import godlo from '../assets/Godlo.svg'
-// import logo from '../assets/LogoUBB.svg'
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
-import { useAuth } from '../contexts/AuthContext'
+// src/components/layout/Header.tsx
+import { useAuth } from '../../contexts/AuthContext'
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 
-export default function AppHeader() {
+
+export default function Header() {
 	const { userData } = useAuth()
 	return (
 		<div className="w-full">

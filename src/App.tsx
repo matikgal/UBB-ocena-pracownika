@@ -1,15 +1,15 @@
-import { BrowserRouter as Router } from 'react-router-dom'
-import AppHeader from './components/AppHeader'
-import QuestionsComponent from './components/questions/QuestionsComponent'
-import { useState, useEffect } from 'react'
-import { AppSidebar } from './components/AppSideBar'
-import LoginComponent from './components/auth/LoginComponent'
-import { AuthProvider, useAuth } from './contexts/AuthContext'
-import { EditQuestionsComponent } from './components/EditQuestionsComponent'
-import { UserManagementComponent } from './components/users/UserManagementComponent'
-import LibraryEvaluationComponent from './components/library/LibraryEvaluationComponent'
-import { Toaster } from 'sonner'
-import { useUserResponses } from './hooks/useUserResponses'
+
+import LoginComponent from "./components/auth/LoginComponent"
+import { EditQuestionsComponent } from "./components/editQuestions/EditQuestionsComponent"
+import { AppSidebar } from "./components/layout/Sidebar"
+import LibraryEvaluationComponent from "./components/library/LibraryEvaluationComponent"
+import QuestionsComponent from "./components/questions/QuestionsComponent"
+import { UserManagementComponent } from "./components/users/UserManagementComponent"
+import { useAuth, AuthProvider } from "./contexts/AuthContext"
+import { useUserResponses } from "./hooks/useUserResponses"
+import Header from "./components/layout/Header" 
+import { useState, useEffect } from "react"
+import { Toaster } from "sonner"
 
 function AppContent() {
 	const [selectedCategory, setSelectedCategory] = useState<string>('Publikacje dydaktyczne')
@@ -133,7 +133,7 @@ function AppContent() {
 					/>
 					<div className="flex-1 flex flex-col pl-1 ">
 						<div className="mb-2">
-							<AppHeader />
+							<Header />
 						</div>
 						<main className="flex-1 overflow-hidden pb-4 px-2">
 							{isEditingQuestions ? (
