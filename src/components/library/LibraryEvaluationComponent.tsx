@@ -2,12 +2,11 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Button } from '../ui/button'
 import { useAuth } from '../../contexts/AuthContext'
 import { Check, X, AlertTriangle } from 'lucide-react'
-import { toast } from 'sonner'
+import { toast } from '../common/Toast';
 import { AccessDenied } from './components/AccessDenied'
 import { ResponseList } from './components/ResponseList'
 import { FilterBar } from './components/FilterBar'
-// Replace this import
-// import { DeleteConfirmation } from './components/DeleteConfirmation'
+
 import { ConfirmDialog } from '../common/ConfirmDialog'
 import { usePagination } from '../../hooks/usePagination'
 import { useResponses } from '../../hooks/useResponses'
@@ -49,10 +48,13 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 	// Check for library access
 	const hasLibraryAccess = hasRole('library') || hasRole('admin') || hasRole('biblioteka')
 
-	// Show toast notifications
+	
 	useEffect(() => {
 		if (successMessage) {
+		
 			toast.success(successMessage);
+		
+			toast.error('Nie wybrano żadnych odpowiedzi do zatwierdzenia');
 		}
 	}, [successMessage]);
 
@@ -171,7 +173,7 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 				onCancel={() => toast.dismiss(t)}
 				onConfirm={async () => {
 					toast.dismiss(t)
-					await deleteResponse(responseId)
+await deleteResponse(responseId, userName)
 				}}
 			/>
 		), { duration: 10000 })

@@ -3,7 +3,7 @@ import { getDocs, collection, query, where, doc, updateDoc, deleteDoc } from "@f
 import { db } from "../../firebase"
 
 import { useState, useCallback } from "react"
-import { toast } from "sonner"
+import { toast } from '../components/common/Toast';
 
 interface Article {
   title: string
