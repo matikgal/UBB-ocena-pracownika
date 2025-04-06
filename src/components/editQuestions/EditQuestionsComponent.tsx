@@ -6,6 +6,7 @@ import { useQuestionsManager } from "../../hooks/useQuestionsManager"
 import { X, ShieldAlert, Trash, Plus, Database, Save } from "lucide-react"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
+import { DeleteConfirmation } from "../library/components/DeleteConfirmation"
 
 interface Question {
 	id: string
@@ -20,8 +21,8 @@ interface EditQuestionsComponentProps {
 }
 
 export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsComponentProps) {
-	// Get user and role from auth context - fixed to use userData and hasRole
-	const { userData, hasRole } = useAuth()
+
+	const { hasRole } = useAuth()
 	const hasAccess = hasRole('admin') || hasRole('dziekan')
 
 	const categories = [
@@ -126,13 +127,28 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 		}
 	}
 
-	const handleDeleteQuestion = async (id: string) => {
-		if (window.confirm('Czy na pewno chcesz usunąć to pytanie?')) {
-			const result = await deleteExistingQuestion(id)
-			if (result) {
-				toast.success('Pytanie zostało usunięte pomyślnie');
-			}
-		}
+	const handleDeleteQuestion = async (questionId: string) => {
+	  if (!questionId) return
+	
+	  // Get the question to be deleted
+	  const questionToDelete = questions.find(q => q.id === questionId)
+	  if (!questionToDelete) return
+	
+	  // Use the DeleteConfirmation component via toast instead of window.confirm
+	  toast.custom((t) => (
+	    <DeleteConfirmation 
+	      t={t}
+	      userName={questionToDelete.title} // Using the question title instead of userName
+	      onCancel={() => toast.dismiss(t)}
+	      onConfirm={async () => {
+	        toast.dismiss(t)
+	        const result = await deleteExistingQuestion(questionId)
+	        if (result) {
+	          toast.success('Pytanie zostało usunięte pomyślnie')
+	        }
+	      }}
+	    />
+	  ), { duration: 10000 })
 	}
 
 	// Obsługa dodawania nowej podpowiedzi do pytania
@@ -226,18 +242,9 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 				</Button>
 			</div>
 
-			{error && (
-				<div
-					className={`mb-4 p-3 rounded-md ${
-						error.includes('Dodano')
-							? 'bg-green-50 text-green-600 border border-green-100'
-							: 'bg-red-50 text-red-600 border border-red-100'
-					}`}>
-					{error}
-				</div>
-			)}
+			
 
-			{/* Wybór kategorii pytań */}
+			
 			<div className="mb-6">
 				<label className="block text-sm font-medium text-gray-700 mb-2">Wybierz kategorię</label>
 				<select
@@ -333,12 +340,15 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 												className="border-gray-200 hover:bg-gray-50 text-gray-700">
 												Edytuj
 											</Button>
+										
+											
 											<Button
-												variant="outline"
-												size="sm"
-												onClick={() => deleteExistingQuestion(question.id)}
-												className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700">
-												Usuń
+											  variant="ghost"
+											  size="icon"
+											  onClick={() => handleDeleteQuestion(question.id)}
+											  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+											>
+											  <Trash className="h-4 w-4" />
 											</Button>
 										</div>
 									</div>

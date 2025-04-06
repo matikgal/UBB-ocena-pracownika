@@ -141,7 +141,7 @@ function AppContent() {
 							) : isManagingUsers ? (
 								<UserManagementComponent onClose={handleCloseUserManagement} />
 							) : isManagingLibrary ? (
-								<LibraryEvaluationComponent />
+								<LibraryEvaluationComponent onClose={() => setIsManagingLibrary(false)} />
 							) : (
 								<QuestionsComponent
 									selectedCategory={selectedCategory}

@@ -1,10 +1,5 @@
-import { BookOpen, LogOut, Edit, Users, RefreshCw } from 'lucide-react'
+import { BookOpen, LogOut, Edit, Users } from 'lucide-react'
 import logo from '../../assets/Logo.svg'
-
-
-import { toast } from 'sonner'
-
-
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../ui/button'
 import { useUserResponses } from '../../hooks/useUserResponses'
@@ -84,20 +79,6 @@ export function AppSidebar({
 	loadResponses(`${category}?refresh=${new Date().getTime()}`);
 	}
 
-	// Function to handle manual refresh of responses and questions
-	const handleRefreshResponses = () => {
-		// Force refresh responses for the current category
-		loadResponses(`${selectedCategory}?refresh=${new Date().getTime()}`)
-		
-		// Dispatch a custom event to notify components to refresh questions
-		const refreshEvent = new CustomEvent('refreshQuestions', { 
-			detail: { category: selectedCategory } 
-		})
-		window.dispatchEvent(refreshEvent)
-		
-		toast.success('Odświeżono pytania i odpowiedzi')
-	}
-
 	// Function to handle library management
 	const handleLibraryManagement = () => {
 		// Force the function call even if it's undefined
@@ -115,17 +96,8 @@ export function AppSidebar({
 			</div>
 
 			<div className="flex-1 overflow-auto px-4 py-5">
-				<div className="flex justify-between items-center mb-3">
+				<div className="mb-3">
 					<h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider ml-2">Kategorie</h2>
-					<Button
-						variant="outline"
-						size="sm"
-						className="flex items-center text-gray-600 hover:text-blue-700"
-						onClick={handleRefreshResponses}
-					>
-						<RefreshCw className="h-3.5 w-3.5 mr-1" />
-						Odśwież
-					</Button>
 				</div>
 				<nav className="space-y-1.5">
 					{categories.map(category => {
@@ -187,9 +159,9 @@ export function AppSidebar({
 				{/* User profile */}
 				<div className="mt-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
 					<div className="flex items-center space-x-3">
-						<Avatar className="h-10 w-10 border-2 border-gray-100">
-							<AvatarImage src={userData.avatar} />
-							<AvatarFallback className="bg-blue-100 text-blue-800">
+						<Avatar className="h-12 w-12 rounded-full overflow-hidden shadow-md border-2 border-blue-100 flex items-center justify-center">
+							<AvatarImage src={userData.avatar} className="object-cover w-full h-full" />
+							<AvatarFallback className="bg-gradient-to-br from-blue-100 to-blue-200 text-blue-800 font-medium text-sm flex items-center justify-center w-full h-full">
 								{userData.name
 									.split(' ')
 									.map(n => n[0])

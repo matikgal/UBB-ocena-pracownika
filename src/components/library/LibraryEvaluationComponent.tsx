@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Button } from '../ui/button'
 import { useAuth } from '../../contexts/AuthContext'
-import { Check } from 'lucide-react'
+import { Check, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { AccessDenied } from './components/AccessDenied'
 import { ResponseList } from './components/ResponseList'
@@ -10,10 +10,14 @@ import { DeleteConfirmation } from './components/DeleteConfirmation'
 import { usePagination } from '../../hooks/usePagination'
 import { useResponses } from '../../hooks/useResponses'
 import { ArticleEditor } from './components/ArticleEditor'
-import { UserResponse, Article } from '../../types/index'
+import { Article } from '../../types/index'
 
-export default function LibraryEvaluationComponent() {
-	// Use a custom hook for response management
+interface LibraryEvaluationComponentProps {
+  onClose?: () => void
+}
+
+export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluationComponentProps) {
+
 	const { 
 		responses, 
 		loading, 
@@ -38,7 +42,7 @@ export default function LibraryEvaluationComponent() {
 	const [searchTerm, setSearchTerm] = useState('')
 	const [selectedResponses, setSelectedResponses] = useState<string[]>([])
 	
-	const { userData, hasRole } = useAuth()
+	const { hasRole } = useAuth()
 	
 	// Check for library access
 	const hasLibraryAccess = hasRole('library') || hasRole('admin') || hasRole('biblioteka')
@@ -112,7 +116,6 @@ export default function LibraryEvaluationComponent() {
 	const { 
 		currentPage, 
 		setCurrentPage, 
-		itemsPerPage, 
 		currentItems, 
 		totalPages 
 	} = usePagination(filteredResponses, 5);
@@ -211,8 +214,17 @@ export default function LibraryEvaluationComponent() {
 
 	return (
 		<div className="h-full p-6 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col overflow-auto">
-			<div className="mb-6">
+			<div className="flex justify-between items-center mb-6">
 				<h2 className="text-2xl font-semibold text-gray-800">Ocena publikacji przez bibliotekę</h2>
+				{onClose && (
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={onClose}
+						className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
+						<X className="h-5 w-5" />
+					</Button>
+				)}
 			</div>
 
 			{error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md border border-red-100">{error}</div>}
