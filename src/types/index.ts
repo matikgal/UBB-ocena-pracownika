@@ -34,4 +34,7 @@ export interface Question {
   points: number | string;
   tooltip: string[];
   category?: string;
+  categoryId?: string;
+  status?: 'pending' | 'approved' | 'rejected';
+  isLibraryEvaluated?: boolean;
 }

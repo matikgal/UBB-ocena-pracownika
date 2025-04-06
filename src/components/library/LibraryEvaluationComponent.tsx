@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Button } from '../ui/button'
 import { useAuth } from '../../contexts/AuthContext'
-import { Check, X } from 'lucide-react'
+import { Check, X, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import { AccessDenied } from './components/AccessDenied'
 import { ResponseList } from './components/ResponseList'
 import { FilterBar } from './components/FilterBar'
-import { DeleteConfirmation } from './components/DeleteConfirmation'
+// Replace this import
+// import { DeleteConfirmation } from './components/DeleteConfirmation'
+import { ConfirmDialog } from '../common/ConfirmDialog'
 import { usePagination } from '../../hooks/usePagination'
 import { useResponses } from '../../hooks/useResponses'
 import { ArticleEditor } from './components/ArticleEditor'
@@ -157,25 +159,23 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 		setShowConfirmation(true);
 	}, []);
 
-	const handleDeleteResponse = useCallback((responseId: string, userEmail: string) => {
-		if (!hasLibraryAccess) return;
-		
-		const responseToDelete = responses.find(r => r.id === responseId);
-		if (!responseToDelete) return;
-		
-		// Use the DeleteConfirmation component via toast
+	const handleDeleteResponse = (responseId: string, userName: string) => {
 		toast.custom((t) => (
-			<DeleteConfirmation 
-				t={t}
-				userName={responseToDelete.userName}
+			<ConfirmDialog
+				title="Potwierdź usunięcie"
+				message={`Czy na pewno chcesz usunąć odpowiedź użytkownika ${userName}? Tej operacji nie można cofnąć.`}
+				confirmLabel="Usuń"
+				cancelLabel="Anuluj"
+				variant="danger"
+				icon={<AlertTriangle className="h-6 w-6" />}
 				onCancel={() => toast.dismiss(t)}
 				onConfirm={async () => {
-					toast.dismiss(t);
-					await deleteResponse(responseId, userEmail);
+					toast.dismiss(t)
+					await deleteResponse(responseId)
 				}}
 			/>
-		), { duration: 10000 });
-	}, [hasLibraryAccess, responses, deleteResponse]);
+		), { duration: 10000 })
+	}
 
 	// Toggle response selection
 	const toggleResponseSelection = useCallback((responseId: string) => {

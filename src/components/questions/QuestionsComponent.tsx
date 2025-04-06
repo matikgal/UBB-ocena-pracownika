@@ -1,11 +1,14 @@
 import { useQuestions } from '../../hooks/useQuestions'
 import { Button } from '../ui/button'
-import { QuestionItem } from './QuestionItem' // Changed from default to named import
-import LoadingState from './components/LoadingState'
-import EmptyState from './components/EmptyState'
+import { QuestionItem } from './QuestionItem'
+// Replace this import
+// import LoadingState from './components/LoadingState'
+import { LoadingState } from '../common/LoadingState'
+import { EmptyState } from '../common/EmptyState'
 import CategoryNavigation from './components/CategoryNavigation'
 import { toast } from 'sonner'
 import { useEffect } from 'react'
+import { FolderOpen } from 'lucide-react'
 
 interface QuestionsComponentProps {
 	selectedCategory: string
@@ -52,13 +55,22 @@ export default function QuestionsComponent({
 	const isLastCategory = currentIndex === categories.length - 1
 
 	if (loading) {
-		return <LoadingState />
+		return <LoadingState 
+			title="Ładowanie pytań"
+			message="Proszę czekać, trwa ładowanie pytań..."
+		/>
 	}
 
 	if (questions.length === 0) {
 		// Show toast for empty state and still render the EmptyState component
 		toast.info(`Brak pytań w kategorii: ${selectedCategory}`);
-		return <EmptyState category={selectedCategory} />
+		return (
+			<EmptyState 
+				title={`Brak pytań w kategorii: ${selectedCategory}`}
+				message="W tej kategorii nie ma jeszcze żadnych pytań."
+				icon={<FolderOpen className="h-8 w-8 text-gray-500" />}
+			/>
+		)
 	}
 
 	return (
