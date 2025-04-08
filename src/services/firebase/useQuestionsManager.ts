@@ -1,18 +1,8 @@
-import { useState, useEffect } from 'react'
-import {
-  fetchQuestionsByCategory,
-  addQuestion,
-  updateQuestion,
-  deleteQuestion,
-} from '../services/firebase/questionsService'
-import { allQuestions } from '../lib/questions'
 
-interface Question {
-  id: string
-  title: string
-  points: number | string
-  tooltip: string[]
-}
+import { useState, useEffect } from 'react'
+import { fetchQuestionsByCategory, addQuestion, updateQuestion, deleteQuestion } from './questionsService'
+import { allQuestions } from '../../lib/questions'
+import { Question } from '../../types'
 
 export function useQuestionsManager(initialCategory: string) {
   const [questions, setQuestions] = useState<Question[]>([])

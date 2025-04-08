@@ -1,11 +1,8 @@
 import { Button } from "../ui/button"
-import { X, Database, Save, Plus } from "lucide-react"
+import { X, Database, Save } from "lucide-react"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { useAuth } from "../../contexts/AuthContext"
-import { useQuestionsManager } from "../../hooks/useQuestionsManager"
-// Replace this import
-// import { DeleteConfirmation } from "../library/components/DeleteConfirmation"
 import { ConfirmDialog } from "../common/ConfirmDialog"
 import { AlertTriangle } from "lucide-react"
 import { AccessDenied } from "../common/AccessDenied"
@@ -13,6 +10,8 @@ import { LoadingState } from "../common/LoadingState"
 import { QuestionForm } from "./components/QuestionForm"
 import { QuestionDisplay } from "./components/QuestionDisplay"
 import { Question } from "../../types"
+import { useQuestionsManager } from "../../services/firebase/useQuestionsManager"
+
 
 interface EditQuestionsComponentProps {
   onClose: () => void
@@ -90,7 +89,17 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
   const handleAddQuestion = async () => {
     if (newQuestion.title.trim() === '') return
 
-    const result = await addNewQuestion(newQuestion, selectedCategory)
+    // Directly add the category to the question object
+    const questionWithCategory = {
+      ...newQuestion,
+      category: selectedCategory
+    }
+    
+    const result = await addNewQuestion(
+      questionWithCategory,
+      selectedCategory
+    )
+    
     if (result) {
       toast.success('Pytanie zostało dodane pomyślnie')
       setNewQuestion({
@@ -104,7 +113,17 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 
   const handleUpdateQuestion = async () => {
     if (!editingQuestion) return
-    const result = await updateExistingQuestion(editingQuestion)
+    
+    // Directly add the category to the question object
+    const questionWithCategory = {
+      ...editingQuestion,
+      category: selectedCategory
+    }
+    
+    const result = await updateExistingQuestion(
+      questionWithCategory
+    )
+    
     if (result) {
       toast.success('Pytanie zostało zaktualizowane pomyślnie')
       setEditingQuestion(null)

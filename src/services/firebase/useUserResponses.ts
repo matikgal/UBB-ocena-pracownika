@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { collection, addDoc, updateDoc, doc, deleteDoc, getDocs, query, where, setDoc, getDoc, orderBy } from 'firebase/firestore';
-import { db } from '../../firebase';
+import { db } from '../../../firebase';
 
 export interface UserResponse {
   id?: string;

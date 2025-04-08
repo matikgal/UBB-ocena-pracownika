@@ -6,20 +6,22 @@ import LibraryEvaluationComponent from "./components/library/LibraryEvaluationCo
 import QuestionsComponent from "./components/questions/QuestionsComponent"
 import { UserManagementComponent } from "./components/users/UserManagementComponent"
 import { useAuth, AuthProvider } from "./contexts/AuthContext"
-import { useUserResponses } from "./hooks/useUserResponses"
+import { useUserResponses } from "./services/firebase/useUserResponses"
 import Header from "./components/layout/Header" 
 import { useState, useEffect } from "react"
 import { Toaster } from "sonner"
+import { ProfileComponent } from "./components/profile/ProfileComponent"
+import { ProfileRoute } from "./components/profile/ProfileRoute"
 
 function AppContent() {
 	const [selectedCategory, setSelectedCategory] = useState<string>('Publikacje dydaktyczne')
 	const [isEditingQuestions, setIsEditingQuestions] = useState<boolean>(false)
 	const [isManagingUsers, setIsManagingUsers] = useState<boolean>(false)
 	const [isManagingLibrary, setIsManagingLibrary] = useState<boolean>(false)
+	const [isViewingProfile, setIsViewingProfile] = useState<boolean>(false)
 	const { isAuthenticated, isLoading, logout, userData, hasRole } = useAuth()
 	const { loadResponses } = useUserResponses()
 	const canEditQuestions = hasRole('admin') || hasRole('dziekan')
-	// Update this line to match the role name in the database
 	const canManageLibrary = hasRole('admin') || hasRole('library') || hasRole('biblioteka')
 
 	// Define categories array to match the sidebar categories
@@ -117,6 +119,25 @@ function AppContent() {
 		// You might need to update your state or refresh data from the server
 	}
 
+	const handleViewProfile = () => {
+		setIsViewingProfile(true)
+		setIsManagingUsers(false)
+		setIsEditingQuestions(false)
+		setIsManagingLibrary(false)
+	}
+
+	const handleCloseProfile = () => {
+		setIsViewingProfile(false)
+	}
+
+	// Add a function to close all other components
+	const handleCloseOtherComponents = () => {
+		setIsViewingProfile(false);
+		setIsManagingUsers(false);
+		setIsEditingQuestions(false);
+		setIsManagingLibrary(false);
+	}
+
 	// Show main application if authenticated
 	return (
 		<div className="h-screen overflow-hidden bg-gray-100">
@@ -130,10 +151,12 @@ function AppContent() {
 						onEditQuestions={handleEditQuestions}
 						onManageUsers={handleManageUsers}
 						onManageLibrary={handleManageLibrary}
+						onViewProfile={handleViewProfile}
+						onCloseOtherComponents={handleCloseOtherComponents}  // Add this new prop
 					/>
 					<div className="flex-1 flex flex-col pl-1 ">
 						<div className="mb-2">
-							<Header />
+							<Header onViewProfile={handleViewProfile} />
 						</div>
 						<main className="flex-1 overflow-hidden pb-4 px-2">
 							{isEditingQuestions ? (
@@ -142,6 +165,8 @@ function AppContent() {
 								<UserManagementComponent onClose={handleCloseUserManagement} />
 							) : isManagingLibrary ? (
 								<LibraryEvaluationComponent onClose={() => setIsManagingLibrary(false)} />
+							) : isViewingProfile ? (
+								<ProfileComponent onClose={handleCloseProfile} />
 							) : (
 								<QuestionsComponent
 									selectedCategory={selectedCategory}

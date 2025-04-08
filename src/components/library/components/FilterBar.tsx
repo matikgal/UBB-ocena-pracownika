@@ -54,7 +54,7 @@ export function FilterBar({
           />
         </div>
         
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap text-black" >
           <Select
             value={filterStatus}
             onValueChange={(value) => setFilterStatus(value as StatusType)}

@@ -1,23 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { collection, getDocs, query, where } from 'firebase/firestore'
-import { db } from '../../firebase'
+import { db } from '../../../firebase'
 import { useUserResponses } from './useUserResponses'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../../contexts/AuthContext'
 import { toast } from 'sonner'
-
-interface Question {
-  id: string
-  title: string
-  points: number | string
-  tooltip: string[]
-  status?: 'pending' | 'approved' | 'rejected' // Add status field
-  isLibraryEvaluated?: boolean // Add this property
-}
-
-interface QuestionState {
-  checked: boolean
-  value: string
-}
+import { Question, QuestionState } from '../../types'
 
 export function useQuestions(selectedCategory: string) {
   const [questionStates, setQuestionStates] = useState<Record<string, QuestionState>>({})
@@ -289,16 +276,6 @@ export function useQuestions(selectedCategory: string) {
         setTimeout(() => {
           setSuccessMessage(null);
         }, 3000);
-        
-        // Important: Don't modify the checkbox state here
-        // We're removing this line:
-        // setQuestionStates(prev => ({
-        //   ...prev,
-        //   [questionId]: {
-        //     ...prev[questionId],
-        //     checked: false,
-        //   },
-        // }));
       }
     } catch (err) {
       console.error('Error deleting response:', err);
@@ -319,7 +296,6 @@ export function useQuestions(selectedCategory: string) {
     // If this is not the initial render and category has changed
     if (previousCategoryRef.current !== selectedCategory && previousCategoryRef.current) {
       // We'll skip the automatic save here since it will be handled by the event listener
-      // saveResponsesAutomatically(); <- Comment this out or remove it
       
       // Also handle unchecked questions by removing their responses
       const uncheckedQuestions = Object.entries(questionStates)

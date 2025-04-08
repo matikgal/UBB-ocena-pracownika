@@ -1,4 +1,4 @@
-// Common types used across the application
+
 
 export interface UserData {
   email: string;
@@ -17,15 +17,20 @@ export interface Article {
 
 export interface UserResponse {
   id: string;
-  userId: string;
-  userName: string;
-  userEmail: string;
+  userId?: string;
+  userName?: string;
+  userEmail?: string;
   questionId: string;
   questionTitle: string;
   points: number;
   category: string;
   status: 'pending' | 'approved' | 'rejected';
   articles?: Article[];
+  createdAt?: Date;
+  updatedAt?: Date;
+  verifiedBy?: string;
+  verifiedAt?: Date;
+  rejectionReason?: string | null;
 }
 
 export interface Question {
@@ -37,4 +42,11 @@ export interface Question {
   categoryId?: string;
   status?: 'pending' | 'approved' | 'rejected';
   isLibraryEvaluated?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface QuestionState {
+  checked: boolean;
+  value: string;
 }

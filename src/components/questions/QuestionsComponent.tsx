@@ -1,4 +1,4 @@
-import { useQuestions } from '../../hooks/useQuestions'
+import { useQuestions } from '../../services/firebase/useQuestions'
 import { Button } from '../ui/button'
 import { QuestionItem } from './QuestionItem'
 // Replace this import

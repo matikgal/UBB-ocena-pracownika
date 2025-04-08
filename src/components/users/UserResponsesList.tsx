@@ -8,7 +8,8 @@ import { CheckCircle, XCircle, HelpCircle } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '../ui/dialog'
 import { Textarea } from '../ui/textarea'
 import { useAuth } from '../../contexts/AuthContext'
-import { useUserResponses } from '../../hooks/useUserResponses'
+import { useUserResponses } from '../../services/firebase/useUserResponses'
+
 
 interface UserResponse {
   id: string

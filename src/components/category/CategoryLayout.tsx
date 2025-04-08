@@ -16,7 +16,6 @@ export default function CategoryLayout({ categories, onLogout, userData }: Categ
 
   const selectedCategory = slugToCategory(categorySlug || '', categories)
 
-  // Handle navigation between categories
   const handlePreviousCategory = () => {
     const currentIndex = categories.indexOf(selectedCategory)
     if (currentIndex > 0) {
@@ -35,13 +34,26 @@ export default function CategoryLayout({ categories, onLogout, userData }: Categ
     navigate(`/kategoria/${categoryToSlug(category)}`)
   }
 
+  const handleViewProfile = () => {
+    navigate('/profil')
+  }
+
+  // Add a function to close other components
+  const handleCloseOtherComponents = () => {
+  // If you have state for other components in this file, reset them here
+  // For example, if you had profile viewing state:
+  // setIsViewingProfile(false);
+  }
+
   return (
     <div className="flex w-full">
       <AppSidebar
+        onViewProfile={handleViewProfile}
         setSelectedCategory={setSelectedCategory}
         selectedCategory={selectedCategory}
         onLogout={onLogout}
         userData={userData}
+        onCloseOtherComponents={handleCloseOtherComponents}  // Add this new prop
       />
       <div className="flex-1 flex flex-col pl-8 pr-4 pt-2">
         <div className="mb-4">

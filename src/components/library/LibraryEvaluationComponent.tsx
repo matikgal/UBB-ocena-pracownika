@@ -9,7 +9,7 @@ import { FilterBar } from './components/FilterBar'
 
 import { ConfirmDialog } from '../common/ConfirmDialog'
 import { usePagination } from '../../hooks/usePagination'
-import { useResponses } from '../../hooks/useResponses'
+import { useResponses } from '../../services/firebase/useResponses'
 import { ArticleEditor } from './components/ArticleEditor'
 import { Article } from '../../types/index'
 

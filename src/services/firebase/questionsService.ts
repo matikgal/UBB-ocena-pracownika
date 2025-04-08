@@ -1,16 +1,6 @@
 import { collection, addDoc, updateDoc, doc, deleteDoc, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../../../firebase';
-
-export interface Question {
-  id: string;
-  title: string;
-  points: number | string;
-  tooltip: string[];
-  category: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-  status?: 'pending' | 'approved' | 'rejected'; // Add status field to interface
-}
+import { Question } from '../../types';
 
 /**
  * Pobiera pytania dla danej kategorii
@@ -33,14 +23,19 @@ export async function fetchQuestionsByCategory(categoryName: string): Promise<Qu
         ? data.tooltip.split(',') 
         : (Array.isArray(data.tooltip) ? data.tooltip : []);
       
+      // Check if this is the library-evaluated question
+      const isLibraryEvaluated = 
+        data.title === "Autorstwo artykułu/monografii (dotyczy pracowników dydaktycznych)" ||
+        data.isLibraryEvaluated === true;
+      
       questions.push({
         id: doc.id,
         title: data.title,
         points: data.points,
         tooltip: tooltip,
         category: data.category,
-        // Only include status if it exists in the database, don't set a default
-        status: data.status
+        status: data.status,
+        isLibraryEvaluated: isLibraryEvaluated
       });
     });
     

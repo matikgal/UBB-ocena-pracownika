@@ -2,9 +2,10 @@ import { BookOpen, LogOut, Edit, Users } from 'lucide-react'
 import logo from '../../assets/Logo.svg'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../ui/button'
-import { useUserResponses } from '../../hooks/useUserResponses'
 import { Avatar, AvatarImage, AvatarFallback } from '@radix-ui/react-avatar'
 import { funkcjeDydaktyczne, nagrodyWyroznienia, podniesienieJakosciNauczania, publikacjeDydaktyczne, zajeciaJezykObcy } from '../../lib/questions'
+import { useUserResponses } from '../../services/firebase/useUserResponses'
+
 
 interface MenuItem {
 	title: string
@@ -47,6 +48,8 @@ interface AppSidebarProps {
 	onEditQuestions?: () => void
 	onManageUsers?: () => void
 	onManageLibrary?: () => void
+	onViewProfile: () => void
+	onCloseOtherComponents?: () => void  // Add this new prop
 }
 
 export function AppSidebar({
@@ -57,6 +60,8 @@ export function AppSidebar({
 	onEditQuestions = () => {},
 	onManageUsers = () => {},
 	onManageLibrary = () => {},
+	onViewProfile = () => {},
+	onCloseOtherComponents = () => {},  // Add default value
 }: AppSidebarProps) {
 	const { hasRole } = useAuth()
 	const { loadResponses } = useUserResponses()
@@ -64,19 +69,21 @@ export function AppSidebar({
 	const canManageLibrary = hasRole('admin') || hasRole('biblioteka') || hasRole('library')
 
 	// Function to handle category selection with response refresh
-	// Modify the handleCategorySelect function to also save responses
 	const handleCategorySelect = (category: string) => {
-	// First, dispatch a custom event to save responses
-	const saveEvent = new CustomEvent('saveResponses', { 
-	detail: { fromCategory: selectedCategory, toCategory: category } 
-	});
-	window.dispatchEvent(saveEvent);
-	
-	// Then set the selected category
-	setSelectedCategory(category);
-	
-	// Force refresh responses when changing category
-	loadResponses(`${category}?refresh=${new Date().getTime()}`);
+		// First, close any open components
+		onCloseOtherComponents();
+		
+		// Then dispatch a custom event to save responses
+		const saveEvent = new CustomEvent('saveResponses', { 
+			detail: { fromCategory: selectedCategory, toCategory: category } 
+		});
+		window.dispatchEvent(saveEvent);
+		
+		// Then set the selected category
+		setSelectedCategory(category);
+		
+		// Force refresh responses when changing category
+		loadResponses(`${category}?refresh=${new Date().getTime()}`);
 	}
 
 	// Function to handle library management
@@ -90,7 +97,7 @@ export function AppSidebar({
 	}
 
 	return (
-		<div className="w-80 h-full bg-gray-50 border-r border-gray-200 flex flex-col shadow-sm">
+		<div className="h-full w-64 bg-white border-r border-gray-200 flex flex-col">
 			<div className="p-2 flex justify-center border-b border-gray-200">
 				<img src={logo} alt="UBB Logo" className="h-20" />
 			</div>
@@ -156,8 +163,11 @@ export function AppSidebar({
 					</Button>
 				)}
 
-				{/* User profile */}
-				<div className="mt-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+				{/* User profile - Updated to be clickable */}
+				<div 
+					className="mt-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm cursor-pointer hover:bg-blue-50 transition-colors"
+					onClick={onViewProfile}
+				>
 					<div className="flex items-center space-x-3">
 						<Avatar className="h-12 w-12 rounded-full overflow-hidden shadow-md border-2 border-blue-100 flex items-center justify-center">
 							<AvatarImage src={userData.avatar} className="object-cover w-full h-full" />
@@ -175,7 +185,10 @@ export function AppSidebar({
 						<Button
 							variant="ghost"
 							size="icon"
-							onClick={onLogout}
+							onClick={(e) => {
+								e.stopPropagation(); // Prevent triggering the parent onClick
+								onLogout();
+							}}
 							className="h-8 w-8 cursor-pointer rounded-full hover:bg-red-50 hover:text-red-600 transition-colors">
 							<LogOut className="h-4 w-4 text-gray-700" />
 						</Button>
