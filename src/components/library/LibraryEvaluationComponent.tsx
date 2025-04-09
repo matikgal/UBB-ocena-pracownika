@@ -19,6 +19,7 @@ interface LibraryEvaluationComponentProps {
 
 export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluationComponentProps) {
 
+	// Pobieranie funkcji i danych z hooka useResponses
 	const { 
 		responses, 
 		loading, 
@@ -31,12 +32,13 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 		batchApproveResponses
 	} = useResponses();
 	
+	// Stany komponentu
 	const [editingResponse, setEditingResponse] = useState<string | null>(null)
 	const [articles, setArticles] = useState<Article[]>([])
 	const [newArticle, setNewArticle] = useState<Article>({ title: '', points: 0 })
 	const [showConfirmation, setShowConfirmation] = useState(false)
 	
-	// Filter and sort state
+	// Stany filtrowania i sortowania
 	const [sortField, setSortField] = useState<'userName' | 'points' | 'status'>('userName')
 	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 	const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
@@ -45,42 +47,41 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 	
 	const { hasRole } = useAuth()
 	
-	// Check for library access
+	// Sprawdzenie uprawnień dostępu do biblioteki
 	const hasLibraryAccess = hasRole('library') || hasRole('admin') || hasRole('biblioteka')
 
 	
+	// Obsługa komunikatów sukcesu
 	useEffect(() => {
 		if (successMessage) {
-		
 			toast.success(successMessage);
-		
-			toast.error('Nie wybrano żadnych odpowiedzi do zatwierdzenia');
 		}
 	}, [successMessage]);
 
+	// Obsługa błędów
 	useEffect(() => {
 		if (error) {
 			toast.error(error);
 		}
 	}, [error]);
 
-	// Fetch responses when component mounts
+	// Pobieranie odpowiedzi przy montowaniu komponentu
 	useEffect(() => {
 		if (hasLibraryAccess) {
 			fetchResponses()
 		}
 	}, [hasLibraryAccess, fetchResponses])
 
-	// Memoize the filtered responses to prevent unnecessary recalculations
+	// Funkcja filtrująca i sortująca odpowiedzi
 	const getFilteredResponses = useCallback(() => {
 		return responses
 			.filter(response => {
-				// Apply status filter
+				// Filtrowanie według statusu
 				if (filterStatus !== 'all' && response.status !== filterStatus) {
 					return false;
 				}
 				
-				// Apply search term
+				// Filtrowanie według wyszukiwanego tekstu
 				if (searchTerm) {
 					const searchLower = searchTerm.toLowerCase();
 					return (
@@ -96,7 +97,7 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 				return true;
 			})
 			.sort((a, b) => {
-				// Apply sorting
+				// Sortowanie wyników
 				if (sortField === 'userName') {
 					return sortDirection === 'asc' 
 						? a.userName.localeCompare(b.userName)
@@ -115,7 +116,7 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 			});
 	}, [responses, filterStatus, searchTerm, sortField, sortDirection]);
 
-	// Use custom pagination hook with memoized filtered responses
+	// Użycie hooka paginacji z zapamiętanymi przefiltrowanymi odpowiedziami
 	const filteredResponses = useMemo(() => getFilteredResponses(), [getFilteredResponses]);
 	const { 
 		currentPage, 
@@ -124,19 +125,21 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 		totalPages 
 	} = usePagination(filteredResponses, 5);
 
+	// Rozpoczęcie edycji odpowiedzi
 	const handleStartEditing = useCallback((responseId: string, existingArticles: Article[] = []) => {
 		setEditingResponse(responseId)
 		setArticles(existingArticles)
 		setNewArticle({ title: '', points: 0 })
 	}, []);
 
+	// Zapisanie oceny publikacji
 	const handleSaveEvaluation = useCallback(async () => {
 		if (!editingResponse) return;
 
 		const response = responses.find(r => r.id === editingResponse);
 		if (!response) return;
 
-		// Calculate total points
+		// Obliczanie sumy punktów
 		const totalPoints = articles.reduce((sum, article) => sum + article.points, 0);
 
 		await updateResponse(
@@ -151,16 +154,19 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 		setShowConfirmation(false);
 	}, [editingResponse, responses, articles, updateResponse]);
 
+	// Anulowanie edycji
 	const handleCancelEditing = useCallback(() => {
 		setEditingResponse(null)
 		setArticles([])
 		setShowConfirmation(false)
 	}, []);
 
+	// Potwierdzenie zapisu
 	const handleConfirmSave = useCallback(() => {
 		setShowConfirmation(true);
 	}, []);
 
+	// Usuwanie odpowiedzi z potwierdzeniem
 	const handleDeleteResponse = (responseId: string, userName: string) => {
 		toast.custom((t) => (
 			<ConfirmDialog
@@ -173,13 +179,13 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 				onCancel={() => toast.dismiss(t)}
 				onConfirm={async () => {
 					toast.dismiss(t)
-await deleteResponse(responseId, userName)
+					await deleteResponse(responseId, userName)
 				}}
 			/>
 		), { duration: 10000 })
 	}
 
-	// Toggle response selection
+	// Przełączanie zaznaczenia odpowiedzi
 	const toggleResponseSelection = useCallback((responseId: string) => {
 		setSelectedResponses(prev => 
 			prev.includes(responseId)
@@ -188,7 +194,7 @@ await deleteResponse(responseId, userName)
 		);
 	}, []);
 
-	// Toggle all responses selection
+	// Przełączanie zaznaczenia wszystkich odpowiedzi
 	const toggleAllResponses = useCallback(() => {
 		const filteredResponses = getFilteredResponses();
 		if (selectedResponses.length === filteredResponses.length) {
@@ -198,7 +204,7 @@ await deleteResponse(responseId, userName)
 		}
 	}, [selectedResponses, getFilteredResponses]);
 
-	// Handle batch approval
+	// Obsługa zbiorczego zatwierdzania
 	const handleBatchApprove = useCallback(async () => {
 		if (selectedResponses.length === 0) {
 			toast.error('Nie wybrano żadnych odpowiedzi do zatwierdzenia');
@@ -209,13 +215,14 @@ await deleteResponse(responseId, userName)
 		setSelectedResponses([]);
 	}, [selectedResponses, batchApproveResponses]);
 
-	// If user doesn't have library access, show access denied
+	// Blokada dostępu dla nieuprawnionych użytkowników
 	if (!hasLibraryAccess) {
 		return <AccessDenied />;
 	}
 
 	return (
 		<div className="h-full p-6 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col overflow-auto">
+			{/* Nagłówek komponentu */}
 			<div className="flex justify-between items-center mb-6">
 				<h2 className="text-2xl font-semibold text-gray-800">Ocena publikacji przez bibliotekę</h2>
 				{onClose && (
@@ -229,18 +236,22 @@ await deleteResponse(responseId, userName)
 				)}
 			</div>
 
+			{/* Wyświetlanie błędów */}
 			{error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md border border-red-100">{error}</div>}
 
+			{/* Wyświetlanie komunikatów sukcesu */}
 			{successMessage && (
 				<div className="mb-4 p-3 bg-green-50 text-green-700 rounded-md border border-green-100">{successMessage}</div>
 			)}
 
+			{/* Stan ładowania */}
 			{loading && !editingResponse ? (
 				<div className="flex items-center justify-center h-40">
 					<p>Ładowanie...</p>
 				</div>
 			) : (
 				<>
+					{/* Tryb edycji publikacji */}
 					{editingResponse ? (
 						<ArticleEditor 
 							response={responses.find(r => r.id === editingResponse)}
@@ -256,6 +267,7 @@ await deleteResponse(responseId, userName)
 						/>
 					) : (
 						<div className="flex-1 overflow-y-auto">
+							{/* Pasek filtrowania i wyszukiwania */}
 							<FilterBar 
 								searchTerm={searchTerm}
 								setSearchTerm={setSearchTerm}
@@ -267,7 +279,7 @@ await deleteResponse(responseId, userName)
 								setSortDirection={setSortDirection}
 							/>
 							
-							{/* Batch actions */}
+							{/* Akcje zbiorcze dla zaznaczonych odpowiedzi */}
 							{selectedResponses.length > 0 && (
 								<div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100 flex justify-between items-center">
 									<p className="text-sm text-blue-700">
@@ -284,6 +296,7 @@ await deleteResponse(responseId, userName)
 								</div>
 							)}
 
+							{/* Lista odpowiedzi */}
 							<ResponseList 
 								items={currentItems}
 								selectedResponses={selectedResponses}
@@ -295,7 +308,7 @@ await deleteResponse(responseId, userName)
 								filteredCount={getFilteredResponses().length}
 							/>
 							
-							{/* Pagination controls */}
+							{/* Kontrolki paginacji */}
 							{totalPages > 1 && (
 								<div className="flex justify-between items-center mt-4">
 									<Button
@@ -324,6 +337,7 @@ await deleteResponse(responseId, userName)
 				</>
 			)}
 
+			{/* Przycisk odświeżania listy */}
 			<div className="mt-4">
 				<Button onClick={fetchResponses} variant="default" className="w-full bg-blue-600 hover:bg-blue-700">
 					Odśwież listę

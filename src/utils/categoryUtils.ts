@@ -1,4 +1,4 @@
-// List of categories
+// Lista kategorii oceny pracownika
 export const categories = [
   'Publikacje dydaktyczne',
   'Podniesienie jakości nauczania',
@@ -7,7 +7,7 @@ export const categories = [
   'Nagrody i wyróznienia',
 ]
 
-// Helper function to convert category name to URL slug
+// Funkcja pomocnicza do konwersji nazwy kategorii na slug URL
 export function categoryToSlug(category: string): string {
   return category
     .toLowerCase()
@@ -15,9 +15,9 @@ export function categoryToSlug(category: string): string {
     .replace(/[^\w-]+/g, '')
 }
 
-// Helper function to convert URL slug to category name
+// Funkcja pomocnicza do konwersji sluga URL na nazwę kategorii
 export function slugToCategory(slug: string, categories: string[]): string {
-  // Check for specific cases with special characters
+  // Obsługa specyficznych przypadków z polskimi znakami
   if (slug === 'nagrody-i-wyroznienia') {
     return 'Nagrody i wyróznienia'
   }
@@ -31,5 +31,6 @@ export function slugToCategory(slug: string, categories: string[]): string {
     return 'Podniesienie jakości nauczania'
   }
 
+  // Wyszukiwanie kategorii na podstawie sluga lub zwrócenie pierwszej kategorii jako domyślnej
   return categories.find(category => categoryToSlug(category) === slug) || categories[0]
 }

@@ -1,11 +1,10 @@
-// Update imports
 import { Search, Filter, SortAsc, SortDesc } from 'lucide-react'
 import { Input } from '../../ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select'
 import { Button } from '../../ui/button'
 import { useId } from 'react'
 
-// Define proper type for status
+// Definicje typów dla filtrowania i sortowania
 type StatusType = 'all' | 'pending' | 'approved' | 'rejected'
 type SortFieldType = 'userName' | 'points' | 'status'
 type SortDirectionType = 'asc' | 'desc'
@@ -31,7 +30,7 @@ export function FilterBar({
   sortDirection,
   setSortDirection
 }: FilterBarProps) {
-  // Generate unique IDs for accessibility
+  // Generowanie unikalnych identyfikatorów dla dostępności
   const searchId = useId()
   const statusId = useId()
   const sortId = useId()
@@ -41,6 +40,7 @@ export function FilterBar({
       <h3 className="text-lg text-black font-medium">Lista zgłoszonych publikacji do oceny</h3>
       
       <div className="flex flex-col gap-2 md:flex-row md:items-center">
+        {/* Pole wyszukiwania publikacji */}
         <div className="relative">
           <label htmlFor={searchId} className="sr-only">Szukaj publikacji</label>
           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -54,7 +54,9 @@ export function FilterBar({
           />
         </div>
         
+        {/* Kontrolki filtrowania i sortowania */}
         <div className="flex items-center gap-2 flex-wrap text-black" >
+          {/* Filtrowanie według statusu */}
           <Select
             value={filterStatus}
             onValueChange={(value) => setFilterStatus(value as StatusType)}
@@ -71,6 +73,7 @@ export function FilterBar({
             </SelectContent>
           </Select>
           
+          {/* Wybór pola do sortowania */}
           <Select
             value={sortField}
             onValueChange={(value) => setSortField(value as SortFieldType)}
@@ -90,6 +93,7 @@ export function FilterBar({
             </SelectContent>
           </Select>
           
+          {/* Przycisk zmiany kierunku sortowania */}
           <Button
             variant="outline"
             size="icon"

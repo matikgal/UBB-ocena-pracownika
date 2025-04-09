@@ -2,9 +2,7 @@ import { collection, addDoc, updateDoc, doc, deleteDoc, getDocs, query, where, o
 import { db } from '../../../firebase';
 import { Question } from '../../types';
 
-/**
- * Pobiera pytania dla danej kategorii
- */
+// Pobiera pytania dla danej kategorii
 export async function fetchQuestionsByCategory(categoryName: string): Promise<Question[]> {
   try {
     const q = query(
@@ -23,7 +21,7 @@ export async function fetchQuestionsByCategory(categoryName: string): Promise<Qu
         ? data.tooltip.split(',') 
         : (Array.isArray(data.tooltip) ? data.tooltip : []);
       
-      // Check if this is the library-evaluated question
+      // Sprawdzenie czy to pytanie oceniane przez bibliotekę
       const isLibraryEvaluated = 
         data.title === "Autorstwo artykułu/monografii (dotyczy pracowników dydaktycznych)" ||
         data.isLibraryEvaluated === true;
@@ -46,9 +44,7 @@ export async function fetchQuestionsByCategory(categoryName: string): Promise<Qu
   }
 }
 
-/**
- * Dodaje nowe pytanie
- */
+// Dodaje nowe pytanie do bazy danych
 export async function addQuestion(question: Omit<Question, 'id'>): Promise<string> {
   try {
     const docRef = await addDoc(collection(db, 'Questions'), {
@@ -62,9 +58,7 @@ export async function addQuestion(question: Omit<Question, 'id'>): Promise<strin
   }
 }
 
-/**
- * Aktualizuje istniejące pytanie
- */
+// Aktualizuje istniejące pytanie
 export async function updateQuestion(id: string, question: Partial<Question>): Promise<void> {
   try {
     await updateDoc(doc(db, 'Questions', id), {
@@ -77,9 +71,7 @@ export async function updateQuestion(id: string, question: Partial<Question>): P
   }
 }
 
-/**
- * Usuwa pytanie
- */
+// Usuwa pytanie z bazy danych
 export async function deleteQuestion(id: string): Promise<void> {
   try {
     await deleteDoc(doc(db, 'Questions', id));

@@ -14,17 +14,22 @@ import { ProfileComponent } from "./components/profile/ProfileComponent"
 import { ProfileRoute } from "./components/profile/ProfileRoute"
 
 function AppContent() {
+	// Inicjalizacja stanów aplikacji
 	const [selectedCategory, setSelectedCategory] = useState<string>('Publikacje dydaktyczne')
 	const [isEditingQuestions, setIsEditingQuestions] = useState<boolean>(false)
 	const [isManagingUsers, setIsManagingUsers] = useState<boolean>(false)
 	const [isManagingLibrary, setIsManagingLibrary] = useState<boolean>(false)
 	const [isViewingProfile, setIsViewingProfile] = useState<boolean>(false)
+	
+	// Pobieranie funkcji i danych z kontekstu uwierzytelniania
 	const { isAuthenticated, isLoading, logout, userData, hasRole } = useAuth()
 	const { loadResponses } = useUserResponses()
+	
+	// Sprawdzanie uprawnień użytkownika
 	const canEditQuestions = hasRole('admin') || hasRole('dziekan')
 	const canManageLibrary = hasRole('admin') || hasRole('library') || hasRole('biblioteka')
 
-	// Define categories array to match the sidebar categories
+	// Lista dostępnych kategorii
 	const categories = [
 		'Publikacje dydaktyczne',
 		'Podniesienie jakości nauczania',
@@ -33,15 +38,14 @@ function AppContent() {
 		'Nagrody i wyróznienia',
 	]
 
-	// Load responses when category changes
+	// Ładowanie odpowiedzi przy zmianie kategorii
 	useEffect(() => {
 		if (isAuthenticated && userData?.email && !isEditingQuestions && !isManagingUsers && !isManagingLibrary) {
-			// Force refresh by adding a timestamp parameter
 			loadResponses(`${selectedCategory}?refresh=${new Date().getTime()}`)
 		}
 	}, [selectedCategory, isAuthenticated, userData?.email, isEditingQuestions, isManagingUsers, isManagingLibrary])
 
-	// Show loading state
+	// Wyświetlanie stanu ładowania
 	if (isLoading) {
 		return (
 			<div className="min-h-screen flex items-center justify-center">
@@ -50,12 +54,12 @@ function AppContent() {
 		)
 	}
 
-	// Show login screen if not authenticated
+	// Wyświetlanie ekranu logowania jeśli użytkownik nie jest uwierzytelniony
 	if (!isAuthenticated) {
 		return <LoginComponent />
 	}
 
-	// Handle navigation between categories
+	// Obsługa nawigacji między kategoriami
 	const handlePreviousCategory = () => {
 		const currentIndex = categories.indexOf(selectedCategory)
 		if (currentIndex > 0) {
@@ -70,8 +74,8 @@ function AppContent() {
 		}
 	}
 
+	// Funkcje obsługujące przełączanie widoków aplikacji
 	const handleEditQuestions = () => {
-		// Only allow users with appropriate roles to edit questions
 		if (canEditQuestions) {
 			setIsEditingQuestions(true)
 			setIsManagingUsers(false)
@@ -80,7 +84,6 @@ function AppContent() {
 	}
 
 	const handleManageUsers = () => {
-		// Only allow users with appropriate roles to manage users
 		if (canEditQuestions) {
 			setIsManagingUsers(true)
 			setIsEditingQuestions(false)
@@ -89,8 +92,6 @@ function AppContent() {
 	}
 
 	const handleManageLibrary = () => {
-		// Only allow users with appropriate roles to manage library evaluations
-		// Update this condition to match the role check above
 		if (canManageLibrary) {
 			console.log('Setting isManagingLibrary to true')
 			setIsManagingLibrary(true)
@@ -101,6 +102,7 @@ function AppContent() {
 		}
 	}
 
+	// Funkcje zamykające poszczególne widoki
 	const handleCloseEdit = () => {
 		setIsEditingQuestions(false)
 	}
@@ -114,9 +116,7 @@ function AppContent() {
 	}
 
 	const handleSaveQuestions = (updatedQuestions: any) => {
-		// Here you would typically save the updated questions to your backend
 		console.log('Updated questions:', updatedQuestions)
-		// You might need to update your state or refresh data from the server
 	}
 
 	const handleViewProfile = () => {
@@ -130,7 +130,7 @@ function AppContent() {
 		setIsViewingProfile(false)
 	}
 
-	// Add a function to close all other components
+	// Funkcja zamykająca wszystkie komponenty
 	const handleCloseOtherComponents = () => {
 		setIsViewingProfile(false);
 		setIsManagingUsers(false);
@@ -138,11 +138,12 @@ function AppContent() {
 		setIsManagingLibrary(false);
 	}
 
-	// Show main application if authenticated
+	// Główny układ aplikacji
 	return (
 		<div className="h-screen overflow-hidden bg-gray-100">
 			<div className="flex h-full">
 				<div className="flex w-full">
+					{/* Pasek boczny aplikacji */}
 					<AppSidebar
 						selectedCategory={selectedCategory}
 						setSelectedCategory={setSelectedCategory}
@@ -152,13 +153,16 @@ function AppContent() {
 						onManageUsers={handleManageUsers}
 						onManageLibrary={handleManageLibrary}
 						onViewProfile={handleViewProfile}
-						onCloseOtherComponents={handleCloseOtherComponents}  // Add this new prop
+						onCloseOtherComponents={handleCloseOtherComponents}
 					/>
 					<div className="flex-1 flex flex-col pl-1 ">
+						{/* Nagłówek aplikacji */}
 						<div className="mb-2">
 							<Header onViewProfile={handleViewProfile} />
 						</div>
+						{/* Główna zawartość aplikacji */}
 						<main className="flex-1 overflow-hidden pb-4 px-2">
+							{/* Warunkowe renderowanie komponentów w zależności od wybranego widoku */}
 							{isEditingQuestions ? (
 								<EditQuestionsComponent onClose={handleCloseEdit} onSave={handleSaveQuestions} />
 							) : isManagingUsers ? (
@@ -179,11 +183,13 @@ function AppContent() {
 					</div>
 				</div>
 			</div>
+			{/* Komponent wyświetlający powiadomienia */}
 			<Toaster position="top-right" />
 		</div>
 	)
 }
 
+// Główny komponent aplikacji owinięty w dostawcę kontekstu uwierzytelniania
 function App() {
 	return (
 		<AuthProvider>

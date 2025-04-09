@@ -3,9 +3,14 @@ import logo from '../../assets/Logo.svg'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@radix-ui/react-avatar'
-import { funkcjeDydaktyczne, nagrodyWyroznienia, podniesienieJakosciNauczania, publikacjeDydaktyczne, zajeciaJezykObcy } from '../../lib/questions'
+import {
+	funkcjeDydaktyczne,
+	nagrodyWyroznienia,
+	podniesienieJakosciNauczania,
+	publikacjeDydaktyczne,
+	zajeciaJezykObcy,
+} from '../../lib/questions'
 import { useUserResponses } from '../../services/firebase/useUserResponses'
-
 
 interface MenuItem {
 	title: string
@@ -14,6 +19,7 @@ interface MenuItem {
 	subcategories: Array<{ id: string; title: string; points: number | string; tooltip: string[] }>
 }
 
+// Definicja dostępnych kategorii pytań
 const categories: MenuItem[] = [
 	{ title: 'Publikacje dydaktyczne', url: '#', icon: BookOpen, subcategories: publikacjeDydaktyczne },
 	{ title: 'Podniesienie jakości nauczania', url: '#', icon: BookOpen, subcategories: podniesienieJakosciNauczania },
@@ -49,7 +55,7 @@ interface AppSidebarProps {
 	onManageUsers?: () => void
 	onManageLibrary?: () => void
 	onViewProfile: () => void
-	onCloseOtherComponents?: () => void  // Add this new prop
+	onCloseOtherComponents?: () => void
 }
 
 export function AppSidebar({
@@ -61,34 +67,35 @@ export function AppSidebar({
 	onManageUsers = () => {},
 	onManageLibrary = () => {},
 	onViewProfile = () => {},
-	onCloseOtherComponents = () => {},  // Add default value
+	onCloseOtherComponents = () => {},
 }: AppSidebarProps) {
 	const { hasRole } = useAuth()
 	const { loadResponses } = useUserResponses()
+
+	// Sprawdzenie uprawnień użytkownika
 	const canEditQuestions = hasRole('admin') || hasRole('dziekan')
 	const canManageLibrary = hasRole('admin') || hasRole('biblioteka') || hasRole('library')
 
-	// Function to handle category selection with response refresh
+	// Funkcja obsługująca wybór kategorii z odświeżeniem odpowiedzi
 	const handleCategorySelect = (category: string) => {
-		// First, close any open components
-		onCloseOtherComponents();
-		
-		// Then dispatch a custom event to save responses
-		const saveEvent = new CustomEvent('saveResponses', { 
-			detail: { fromCategory: selectedCategory, toCategory: category } 
-		});
-		window.dispatchEvent(saveEvent);
-		
-		// Then set the selected category
-		setSelectedCategory(category);
-		
-		// Force refresh responses when changing category
-		loadResponses(`${category}?refresh=${new Date().getTime()}`);
+		// Najpierw zamknij wszystkie otwarte komponenty
+		onCloseOtherComponents()
+
+		// Następnie wyślij zdarzenie zapisania odpowiedzi
+		const saveEvent = new CustomEvent('saveResponses', {
+			detail: { fromCategory: selectedCategory, toCategory: category },
+		})
+		window.dispatchEvent(saveEvent)
+
+		// Ustaw wybraną kategorię
+		setSelectedCategory(category)
+
+		// Wymuś odświeżenie odpowiedzi przy zmianie kategorii
+		loadResponses(`${category}?refresh=${new Date().getTime()}`)
 	}
 
-	// Function to handle library management
+	// Funkcja obsługująca zarządzanie biblioteką
 	const handleLibraryManagement = () => {
-		// Force the function call even if it's undefined
 		if (typeof onManageLibrary === 'function') {
 			onManageLibrary()
 		} else {
@@ -97,11 +104,13 @@ export function AppSidebar({
 	}
 
 	return (
-		<div className="h-full w-64 bg-white border-r border-gray-200 flex flex-col">
+		<div className="h-full w-80 bg-white border-r border-gray-200 flex flex-col">
+			{/* Logo aplikacji */}
 			<div className="p-2 flex justify-center border-b border-gray-200">
 				<img src={logo} alt="UBB Logo" className="h-20" />
 			</div>
 
+			{/* Lista kategorii */}
 			<div className="flex-1 overflow-auto px-4 py-5">
 				<div className="mb-3">
 					<h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider ml-2">Kategorie</h2>
@@ -130,8 +139,9 @@ export function AppSidebar({
 				</nav>
 			</div>
 
+			{/* Sekcja dolna z przyciskami akcji i profilem użytkownika */}
 			<div className="p-4 space-y-3 border-t border-gray-200 bg-gray-100">
-				{/* Admin actions */}
+				{/* Przyciski administracyjne */}
 				{canEditQuestions && (
 					<div className="space-y-2">
 						<Button
@@ -152,7 +162,7 @@ export function AppSidebar({
 					</div>
 				)}
 
-				{/* Library management button */}
+				{/* Przycisk zarządzania biblioteką */}
 				{canManageLibrary && (
 					<Button
 						variant="outline"
@@ -163,11 +173,10 @@ export function AppSidebar({
 					</Button>
 				)}
 
-				{/* User profile - Updated to be clickable */}
-				<div 
+				{/* Profil użytkownika z możliwością kliknięcia */}
+				<div
 					className="mt-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm cursor-pointer hover:bg-blue-50 transition-colors"
-					onClick={onViewProfile}
-				>
+					onClick={onViewProfile}>
 					<div className="flex items-center space-x-3">
 						<Avatar className="h-12 w-12 rounded-full overflow-hidden shadow-md border-2 border-blue-100 flex items-center justify-center">
 							<AvatarImage src={userData.avatar} className="object-cover w-full h-full" />
@@ -182,12 +191,13 @@ export function AppSidebar({
 							<p className="text-sm font-medium text-gray-900 truncate">{userData.name}</p>
 							<p className="text-xs text-gray-500 truncate">{userData.email}</p>
 						</div>
+						{/* Przycisk wylogowania z zatrzymaniem propagacji kliknięcia */}
 						<Button
 							variant="ghost"
 							size="icon"
-							onClick={(e) => {
-								e.stopPropagation(); // Prevent triggering the parent onClick
-								onLogout();
+							onClick={e => {
+								e.stopPropagation()
+								onLogout()
 							}}
 							className="h-8 w-8 cursor-pointer rounded-full hover:bg-red-50 hover:text-red-600 transition-colors">
 							<LogOut className="h-4 w-4 text-gray-700" />

@@ -2,9 +2,7 @@ import { collection, addDoc, updateDoc, doc, deleteDoc, getDocs, query, where, g
 import { db } from '../../../firebase';
 import { Article, UserResponse } from '../../types';
 
-/**
- * Fetches responses for a specific user and category
- */
+// Pobiera odpowiedzi dla konkretnego użytkownika i kategorii
 export async function fetchUserResponses(userEmail: string, category?: string): Promise<UserResponse[]> {
   try {
     const responsesCollectionRef = collection(db, 'Users', userEmail, 'responses');
@@ -52,9 +50,7 @@ export async function fetchUserResponses(userEmail: string, category?: string): 
   }
 }
 
-/**
- * Fetches responses for all users with a specific question title
- */
+// Pobiera odpowiedzi wszystkich użytkowników dla konkretnego tytułu pytania
 export async function fetchAllUserResponses(questionTitle: string): Promise<UserResponse[]> {
   try {
     const allResponses: UserResponse[] = [];
@@ -102,15 +98,13 @@ export async function fetchAllUserResponses(questionTitle: string): Promise<User
   }
 }
 
-/**
- * Saves or updates a user response
- */
+// Zapisuje lub aktualizuje odpowiedź użytkownika
 export async function saveUserResponse(
   userEmail: string,
   response: Omit<UserResponse, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<string> {
   try {
-    // Convert points value - replace commas with dots if it's a string
+    // Konwersja wartości punktów - zamiana przecinków na kropki jeśli to string
     let pointsValue = response.points;
     if (typeof pointsValue === 'string') {
       pointsValue = parseFloat(String(pointsValue).replace(',', '.'));
@@ -125,6 +119,7 @@ export async function saveUserResponse(
     
     const querySnapshot = await getDocs(q);
     
+    // Aktualizacja istniejącej odpowiedzi lub dodanie nowej
     if (!querySnapshot.empty) {
       const existingResponseDoc = querySnapshot.docs[0];
       
@@ -156,9 +151,7 @@ export async function saveUserResponse(
   }
 }
 
-/**
- * Updates a response with articles and verification
- */
+// Aktualizuje odpowiedź z artykułami i weryfikacją
 export async function updateResponseWithArticles(
   userEmail: string,
   responseId: string,
@@ -184,9 +177,7 @@ export async function updateResponseWithArticles(
   }
 }
 
-/**
- * Verifies a response (approve or reject)
- */
+// Weryfikuje odpowiedź (zatwierdza lub odrzuca)
 export async function verifyResponse(
   userEmail: string,
   responseId: string,

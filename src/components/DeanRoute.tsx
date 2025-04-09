@@ -9,7 +9,7 @@ interface DeanRouteProps {
 export const DeanRoute: React.FC<DeanRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading, hasRole } = useAuth();
   
-  // Show loading state
+  // Wyświetlanie stanu ładowania
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -18,14 +18,15 @@ export const DeanRoute: React.FC<DeanRouteProps> = ({ children }) => {
     );
   }
   
-  // Redirect to login if not authenticated
+  // Przekierowanie do logowania jeśli użytkownik nie jest uwierzytelniony
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
   }
   
-  // Check if user has dean role
+  // Sprawdzenie czy użytkownik ma rolę dziekana
   const isDean = hasRole('dziekan');
   
+  // Wyświetlanie komunikatu o braku dostępu
   if (!isDean) {
     return (
       <div className="min-h-screen flex items-center justify-center flex-col">
@@ -41,6 +42,6 @@ export const DeanRoute: React.FC<DeanRouteProps> = ({ children }) => {
     );
   }
   
-  // If user has dean role, render the children
+  // Jeśli użytkownik ma rolę dziekana, renderuj komponenty potomne
   return <>{children}</>;
 };

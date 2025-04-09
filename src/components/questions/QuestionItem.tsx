@@ -11,7 +11,7 @@ interface Question {
   points: number | string
   tooltip: string[]
   status?: 'pending' | 'approved' | 'rejected'
-  isLibraryEvaluated?: boolean // New field to identify library-evaluated questions
+  isLibraryEvaluated?: boolean
 }
 
 interface QuestionItemProps {
@@ -32,10 +32,8 @@ export function QuestionItem({
   onDelete
 }: QuestionItemProps) {
  
-  
-  // Determine border and background color based on status
+  // Określenie koloru obramowania i tła na podstawie statusu
   const getBorderAndBgColor = () => {
-    // Always check status first, regardless of checked state
     if (question.status) {
       switch (question.status) {
         case 'approved':
@@ -47,30 +45,27 @@ export function QuestionItem({
       }
     }
     
-    // If no status but checked
     if (checked) {
       return 'border-blue-500 bg-blue-50';
     }
     
-    // Default state
     return 'border-gray-200 bg-white';
   };
 
-  // Determine if editing is disabled (when approved)
+  // Sprawdzenie czy edycja jest wyłączona (gdy pytanie jest zatwierdzone)
   const isEditingDisabled = question.status === 'approved';
   
-  // Check if this is the library-evaluated question
+  // Sprawdzenie czy to pytanie oceniane przez bibliotekę
   const isLibraryQuestion = question.isLibraryEvaluated || 
     question.title === "Autorstwo artykułu/monografii (dotyczy pracowników dydaktycznych)";
 
-  // Determine if checkbox should be checked
+  // Określenie czy checkbox powinien być zaznaczony
   const isChecked = question.status === 'approved' || question.status === 'pending' || checked;
 
   return (
     <div 
       className={`p-4 rounded-lg shadow border-2 ${getBorderAndBgColor()} transition-all ${isEditingDisabled ? 'cursor-default' : 'cursor-pointer'}`}
       onClick={(e) => {
-        // Prevent triggering if clicking on input, tooltip, or if editing is disabled
         if (
           isEditingDisabled ||
           e.target instanceof HTMLInputElement || 
@@ -86,6 +81,7 @@ export function QuestionItem({
       }}
     >
       <div className="flex items-start gap-4 ">
+        {/* Checkbox do zaznaczania pytania */}
         <Checkbox 
           id={`question-${question.id}`} 
           checked={isChecked}
@@ -99,20 +95,21 @@ export function QuestionItem({
         
         <div className="flex-1">
           <div className="flex items-start justify-between text-black">
+            {/* Tytuł pytania */}
             <label 
               htmlFor={`question-${question.id}`}
               className={`text-sm font-medium leading-tight cursor-pointer ${isEditingDisabled ? 'cursor-default' : ''}`}
             >
               {question.title}
               
-              {/* Show library icon for library-evaluated questions */}
+              {/* Ikona dla pytań ocenianych przez bibliotekę */}
               {isLibraryQuestion && (
                 <span className="ml-2 inline-flex items-center">
                   <BookOpen className="h-4 w-4 text-blue-600" />
                 </span>
               )}
               
-              {/* Show status badges */}
+              {/* Etykiety statusu */}
               {question.status && (
                 <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
                   ${question.status === 'approved' ? 'bg-green-100 text-green-800' : 
@@ -124,7 +121,7 @@ export function QuestionItem({
               )}
             </label>
             
-            {/* Tooltip */}
+            {/* Podpowiedź dla pytania */}
             {question.tooltip && question.tooltip.length > 0 && question.tooltip[0] !== '' && (
               <TooltipProvider>
                 <Tooltip>
@@ -145,7 +142,7 @@ export function QuestionItem({
             )}
           </div>
           
-          {/* Points input */}
+          {/* Pole wprowadzania punktów */}
           <div className="mt-2 flex items-center justify-between">
             <div className="flex items-center">
               <Input
@@ -161,7 +158,7 @@ export function QuestionItem({
               <span className="ml-2 text-sm text-gray-600">punktów</span>
             </div>
             
-            {/* Delete button - show for all responses except approved ones */}
+            {/* Przycisk usuwania - widoczny dla wszystkich odpowiedzi oprócz zatwierdzonych */}
             {question.status !== 'approved' && (
               <Button
                 variant="ghost"

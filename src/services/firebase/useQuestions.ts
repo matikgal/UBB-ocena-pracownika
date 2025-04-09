@@ -7,42 +7,42 @@ import { toast } from 'sonner'
 import { Question, QuestionState } from '../../types'
 
 export function useQuestions(selectedCategory: string) {
+  // Inicjalizacja stanów
   const [questionStates, setQuestionStates] = useState<Record<string, QuestionState>>({})
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   
-  // Update this line to include deleteResponse
+  // Pobieranie funkcji i danych z innych hooków
   const { saveResponse, loadResponses, responses, deleteResponse } = useUserResponses()
   const { userData } = useAuth()
   
-  // Use a ref to track if we've already loaded data for this category
+  // Referencja do śledzenia, czy dane zostały już załadowane dla tej kategorii
   const dataLoadedRef = useRef<Record<string, boolean>>({});
   
-  // Make sure responses are loaded when component mounts or category changes
+  // Ładowanie danych przy montowaniu komponentu lub zmianie kategorii
   useEffect(() => {
-    // Always reset questions when category changes
+    // Resetowanie pytań przy zmianie kategorii
     setQuestions([]);
     
     const loadData = async () => {
       setLoading(true);
       try {
-        // Mark this category as loaded
+        // Oznaczenie kategorii jako załadowanej
         dataLoadedRef.current[selectedCategory] = true;
         
-        // Fetch questions first
+        // Najpierw pobierz pytania
         await fetchQuestions();
         
         if (userData?.email) {
-          // Always force refresh responses when category changes by adding timestamp
-          // This ensures we bypass any caching mechanism in useUserResponses
+          // Wymuszenie odświeżenia odpowiedzi przy zmianie kategorii
           await loadResponses(`${selectedCategory}?refresh=${new Date().getTime()}`);
         }
       } catch (err) {
         console.error('Error loading data:', err);
         setError('Nie udało się załadować danych');
-        // Reset the loading flag on error
+        // Resetowanie flagi ładowania w przypadku błędu
         dataLoadedRef.current[selectedCategory] = false;
       } finally {
         setLoading(false);
@@ -52,8 +52,7 @@ export function useQuestions(selectedCategory: string) {
     loadData();
   }, [selectedCategory, userData?.email]);
 
-  // Inside the fetchQuestions function, modify the part where questions are processed:
-  
+  // Pobieranie pytań dla wybranej kategorii
   const fetchQuestions = async () => {
     try {
       console.log('Fetching questions for category:', selectedCategory)
@@ -66,11 +65,11 @@ export function useQuestions(selectedCategory: string) {
       querySnapshot.forEach(doc => {
         const data = doc.data()
   
-        // Parse tooltip string into array if it's a string
+        // Parsowanie podpowiedzi ze stringa do tablicy
         const tooltip =
           typeof data.tooltip === 'string' ? data.tooltip.split(',') : Array.isArray(data.tooltip) ? data.tooltip : []
   
-        // Check if this is the library-evaluated question
+        // Sprawdzenie czy to pytanie oceniane przez bibliotekę
         const isLibraryEvaluated = 
           data.title === "Autorstwo artykułu/monografii (dotyczy pracowników dydaktycznych)" ||
           data.isLibraryEvaluated === true;
@@ -79,7 +78,6 @@ export function useQuestions(selectedCategory: string) {
           id: doc.id,
           ...data,
           tooltip: tooltip,
-          // Only include status if it exists in the database
           status: data.status,
           isLibraryEvaluated: isLibraryEvaluated
         } as Question)
@@ -95,14 +93,14 @@ export function useQuestions(selectedCategory: string) {
     }
   }
 
-  // Update when responses change to properly initialize question states
+  // Aktualizacja stanów pytań przy zmianie odpowiedzi
   useEffect(() => {
     if (questions.length > 0 && responses) {
       initializeQuestionStates(questions)
     }
   }, [responses, questions])
 
-  // Update initializeQuestionStates to properly handle existing responses
+  // Inicjalizacja stanów pytań na podstawie istniejących odpowiedzi
   const initializeQuestionStates = (fetchedQuestions: Question[]) => {
     const initialStates: Record<string, QuestionState> = {}
   
@@ -112,12 +110,12 @@ export function useQuestions(selectedCategory: string) {
       if (existingResponse) {
         question.status = existingResponse.status;
       } else {
-        // Reset status if no existing response is found
+        // Resetowanie statusu jeśli nie znaleziono odpowiedzi
         question.status = undefined;
       }
   
       initialStates[question.id] = {
-        // Set checked to true if there's an existing response OR if the question is approved
+        // Zaznaczenie checkboxa jeśli istnieje odpowiedź LUB pytanie jest zatwierdzone
         checked: existingResponse ? true : question.status === 'approved',
         value: existingResponse
           ? existingResponse.points.toString()
@@ -130,11 +128,12 @@ export function useQuestions(selectedCategory: string) {
     setQuestionStates(initialStates)
   }
 
+  // Obsługa zmiany stanu checkboxa
   const handleCheckboxChange = (questionId: string) => {
-    // Get the current state before updating
+    // Pobranie aktualnego stanu przed aktualizacją
     const isCurrentlyChecked = questionStates[questionId]?.checked;
     
-    // Update the question state
+    // Aktualizacja stanu pytania
     setQuestionStates(prev => ({
       ...prev,
       [questionId]: {
@@ -142,32 +141,29 @@ export function useQuestions(selectedCategory: string) {
         checked: !isCurrentlyChecked,
       },
     }));
-  
-    // If it's being checked, we'll save it when the user clicks save
-    // or when they change categories (already implemented in saveResponsesAutomatically)
   };
 
-  // Modify the saveResponsesAutomatically function to be more robust
+  // Automatyczne zapisywanie odpowiedzi
   const saveResponsesAutomatically = async () => {
     if (!userData || !userData.email) return;
     
     try {
-      // Get all checked questions
+      // Pobierz wszystkie zaznaczone pytania
       const checkedQuestions = Object.entries(questionStates)
         .filter(([_, state]) => state.checked)
         .map(([id, state]) => ({
           id,
-          // Replace commas with dots before parsing to handle different number formats
+          // Zamiana przecinków na kropki przed parsowaniem
           points: parseFloat(state.value.replace(',', '.')),
         }));
   
       if (checkedQuestions.length === 0) return;
   
-      // Save each response
+      // Zapisz każdą odpowiedź
       for (const item of checkedQuestions) {
         const question = questions.find(q => q.id === item.id);
         if (question) {
-          // Skip questions with approved status
+          // Pomiń pytania o statusie "zatwierdzone"
           if (question.status === 'approved') {
             continue;
           }
@@ -180,6 +176,7 @@ export function useQuestions(selectedCategory: string) {
     }
   };
 
+  // Obsługa zmiany wartości punktów
   const handleValueChange = (questionId: string, value: string) => {
     setQuestionStates(prev => ({
       ...prev,
@@ -190,25 +187,25 @@ export function useQuestions(selectedCategory: string) {
     }))
   }
 
-  // Add function to save responses
-  // Show toast when error changes
+  // Wyświetlanie powiadomień o błędach
   useEffect(() => {
     if (error) {
       toast.error(error);
-      // Clear error after showing toast
+      // Czyszczenie błędu po wyświetleniu powiadomienia
       setTimeout(() => setError(null), 100);
     }
   }, [error]);
 
-  // Show toast when success message changes
+  // Wyświetlanie powiadomień o sukcesie
   useEffect(() => {
     if (successMessage) {
       toast.success(successMessage);
-      // Clear success message after showing toast
+      // Czyszczenie komunikatu po wyświetleniu powiadomienia
       setTimeout(() => setSuccessMessage(null), 100);
     }
   }, [successMessage]);
 
+  // Obsługa zapisywania odpowiedzi
   const handleSaveResponses = async () => {
     if (!userData?.email) {
       toast.error('Musisz być zalogowany, aby zapisać odpowiedzi');
@@ -216,120 +213,99 @@ export function useQuestions(selectedCategory: string) {
     }
   
     try {
-      // Get all checked questions
+      setLoading(true);
+      
+      // Pobierz wszystkie zaznaczone pytania
       const checkedQuestions = Object.entries(questionStates)
         .filter(([_, state]) => state.checked)
         .map(([id, state]) => ({
           id,
-          // Replace commas with dots before parsing
+          // Zamiana przecinków na kropki przed parsowaniem
           points: parseFloat(state.value.replace(',', '.')),
         }));
-  
+      
       if (checkedQuestions.length === 0) {
-        toast.error('Nie wybrano żadnych pytań');
+        setError('Nie wybrano żadnych pytań');
+        setLoading(false);
         return;
       }
-  
-      // Save each response
+      
+      // Zapisz każdą odpowiedź
       for (const item of checkedQuestions) {
         const question = questions.find(q => q.id === item.id);
         if (question) {
-          // Skip questions with approved status
+          // Pomiń pytania o statusie "zatwierdzone"
           if (question.status === 'approved') {
             continue;
           }
           await saveResponse(question.id, question.title, item.points, selectedCategory, question.status);
         }
       }
-  
-      // Show success toast
-      const hasUncheckedResponses = Object.entries(questionStates).some(([_, state]) => !state.checked);
-      toast.success(
-        hasUncheckedResponses
-          ? 'Odpowiedzi zostały zapisane, a odznaczone pytania usunięte' 
-          : 'Odpowiedzi zostały zapisane'
-      );
+      
+      // Odśwież odpowiedzi po zapisaniu
+      await loadResponses(`${selectedCategory}?refresh=${new Date().getTime()}`);
+      
+      setSuccessMessage('Odpowiedzi zostały zapisane');
     } catch (err) {
       console.error('Error saving responses:', err);
-      toast.error('Nie udało się zapisać odpowiedzi');
+      setError('Nie udało się zapisać odpowiedzi');
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Obsługa usuwania odpowiedzi
   const handleDeleteResponse = async (questionId: string) => {
     if (!userData?.email) {
       toast.error('Musisz być zalogowany, aby usunąć odpowiedź');
-      return false;
+      return;
     }
-  
+    
     try {
-      // Find the response for this question
-      const existingResponse = responses.find(r => r.questionId === questionId);
+      setLoading(true);
       
-      if (existingResponse && existingResponse.id) {
-        // Delete the response but don't change the checkbox state
-        await deleteResponse(existingResponse.id);
-        
-        // Set success message
-        setSuccessMessage('Odpowiedź została usunięta');
-        
-        // Clear success message after 3 seconds
-        setTimeout(() => {
-          setSuccessMessage(null);
-        }, 3000);
+      // Znajdź odpowiedź dla tego pytania
+      const response = responses.find(r => r.questionId === questionId);
+      
+      if (!response || !response.id) {
+        setError('Nie znaleziono odpowiedzi do usunięcia');
+        setLoading(false);
+        return;
       }
+      
+      // Nie można usunąć zatwierdzonych odpowiedzi
+      if (response.status === 'approved') {
+        setError('Nie można usunąć zatwierdzonych odpowiedzi');
+        setLoading(false);
+        return;
+      }
+      
+      // Usuń odpowiedź
+      await deleteResponse(response.id);
+      
+      // Odśwież odpowiedzi po usunięciu
+      await loadResponses(`${selectedCategory}?refresh=${new Date().getTime()}`);
+      
+      // Zaktualizuj stan pytania
+      setQuestionStates(prev => ({
+        ...prev,
+        [questionId]: {
+          ...prev[questionId],
+          checked: false,
+          value: typeof questions.find(q => q.id === questionId)?.points === 'number' 
+            ? questions.find(q => q.id === questionId)?.points.toString() || '0'
+            : '0',
+        },
+      }));
+      
+      setSuccessMessage('Odpowiedź została usunięta');
     } catch (err) {
       console.error('Error deleting response:', err);
       setError('Nie udało się usunąć odpowiedzi');
-      
-      // Clear error after 3 seconds
-      setTimeout(() => {
-        setError(null);
-      }, 3000);
+    } finally {
+      setLoading(false);
     }
   };
-
-  // Add a ref to track the previous category
-  const previousCategoryRef = useRef<string>(selectedCategory);
-  
-  // Add effect to handle category changes
-  useEffect(() => {
-    // If this is not the initial render and category has changed
-    if (previousCategoryRef.current !== selectedCategory && previousCategoryRef.current) {
-      // We'll skip the automatic save here since it will be handled by the event listener
-      
-      // Also handle unchecked questions by removing their responses
-      const uncheckedQuestions = Object.entries(questionStates)
-        .filter(([_, state]) => !state.checked)
-        .map(([id]) => id);
-        
-      // Delete responses for unchecked questions
-      uncheckedQuestions.forEach(questionId => {
-        const existingResponse = responses.find(r => r.questionId === questionId);
-        if (existingResponse && existingResponse.id) {
-          deleteResponse(existingResponse.id);
-        }
-      });
-    }
-    
-    // Update the ref with current category
-    previousCategoryRef.current = selectedCategory;
-  }, [selectedCategory]);
-  
-  // Add this effect to listen for the saveResponses event
-  useEffect(() => {
-    const handleSaveEvent = (event: CustomEvent) => {
-      // Call the same function that's used by the Save button
-      handleSaveResponses();
-    };
-  
-    // Add event listener
-    window.addEventListener('saveResponses', handleSaveEvent as EventListener);
-  
-    // Cleanup
-    return () => {
-      window.removeEventListener('saveResponses', handleSaveEvent as EventListener);
-    };
-  }, [questionStates, questions, userData?.email]); // Add dependencies that handleSaveResponses uses
 
   return {
     questions,
@@ -340,6 +316,6 @@ export function useQuestions(selectedCategory: string) {
     handleCheckboxChange,
     handleValueChange,
     handleSaveResponses,
-    handleDeleteResponse,
-  };
+    handleDeleteResponse
+  }
 }

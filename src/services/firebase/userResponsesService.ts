@@ -1,6 +1,7 @@
 import { collection, addDoc, updateDoc, doc, deleteDoc, getDocs, query, where, orderBy, setDoc } from 'firebase/firestore';
 import { db } from '../../../firebase';
 
+// Interfejs definiujący strukturę odpowiedzi użytkownika
 export interface UserResponse {
   id?: string;
   questionId: string;
@@ -11,15 +12,12 @@ export interface UserResponse {
   updatedAt?: Date;
 }
 
-/**
- * Saves a user's response to a question
- */
 export async function saveUserResponse(userEmail: string, response: UserResponse): Promise<string> {
   try {
-    // Create a reference to the user's responses subcollection
+    // Utworzenie referencji do podkolekcji odpowiedzi użytkownika
     const responsesCollectionRef = collection(db, 'Users', userEmail, 'responses');
     
-    // Check if response for this question already exists
+    // Sprawdzenie czy odpowiedź na to pytanie już istnieje
     const q = query(
       responsesCollectionRef,
       where('questionId', '==', response.questionId)
@@ -27,14 +25,14 @@ export async function saveUserResponse(userEmail: string, response: UserResponse
     
     const querySnapshot = await getDocs(q);
     
-    // Convert points value - replace commas with dots if it's a string
+    // Konwersja wartości punktów - zamiana przecinków na kropki jeśli to string
     let pointsValue = response.points;
     if (typeof pointsValue === 'string') {
       pointsValue = parseFloat(String(pointsValue).replace(',', '.'));
     }
     
     if (!querySnapshot.empty) {
-      // Update existing response
+      // Aktualizacja istniejącej odpowiedzi
       const existingResponseDoc = querySnapshot.docs[0];
       console.log(pointsValue),
       await updateDoc(doc(db, 'Users', userEmail, 'responses', existingResponseDoc.id), {
@@ -44,7 +42,7 @@ export async function saveUserResponse(userEmail: string, response: UserResponse
       });
       return existingResponseDoc.id;
     } else {
-      // Add new response
+      // Dodanie nowej odpowiedzi
       const docRef = await addDoc(responsesCollectionRef, {
         ...response,
         points: pointsValue,
@@ -58,21 +56,21 @@ export async function saveUserResponse(userEmail: string, response: UserResponse
   }
 }
 
-/**
- * Fetches all responses for a user
- */
 export async function fetchUserResponses(userEmail: string, category?: string): Promise<UserResponse[]> {
   try {
+    // Referencja do kolekcji odpowiedzi użytkownika
     const responsesCollectionRef = collection(db, 'Users', userEmail, 'responses');
     
     let q;
     if (category) {
+      // Zapytanie filtrujące odpowiedzi według kategorii
       q = query(
         responsesCollectionRef,
         where('category', '==', category),
         orderBy('createdAt', 'desc')
       );
     } else {
+      // Zapytanie pobierające wszystkie odpowiedzi użytkownika
       q = query(
         responsesCollectionRef,
         orderBy('createdAt', 'desc')
@@ -82,6 +80,7 @@ export async function fetchUserResponses(userEmail: string, category?: string): 
     const querySnapshot = await getDocs(q);
     const responses: UserResponse[] = [];
     
+    // Przetwarzanie wyników zapytania
     querySnapshot.forEach((doc) => {
       responses.push({
         id: doc.id,
@@ -96,11 +95,9 @@ export async function fetchUserResponses(userEmail: string, category?: string): 
   }
 }
 
-/**
- * Deletes a user response
- */
 export async function deleteUserResponse(userEmail: string, responseId: string): Promise<void> {
   try {
+    // Usunięcie odpowiedzi użytkownika z bazy danych
     await deleteDoc(doc(db, 'Users', userEmail, 'responses', responseId));
   } catch (error) {
     console.error('Error deleting user response:', error);

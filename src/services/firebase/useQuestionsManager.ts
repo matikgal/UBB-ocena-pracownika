@@ -5,16 +5,17 @@ import { allQuestions } from '../../lib/questions'
 import { Question } from '../../types'
 
 export function useQuestionsManager(initialCategory: string) {
+  // Inicjalizacja stanów
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Fetch questions when component mounts or category changes
+  // Pobieranie pytań przy montowaniu komponentu lub zmianie kategorii
   useEffect(() => {
     fetchQuestions(initialCategory)
   }, [initialCategory])
 
-  // Fetch questions for a specific category
+  // Pobieranie pytań dla konkretnej kategorii
   const fetchQuestions = async (category: string) => {
     try {
       setLoading(true)
@@ -29,7 +30,7 @@ export function useQuestionsManager(initialCategory: string) {
     }
   }
 
-  // Add a new question
+  // Dodawanie nowego pytania
   const addNewQuestion = async (question: Question, category: string) => {
     if (question.title.trim() === '') return null
 
@@ -43,7 +44,7 @@ export function useQuestionsManager(initialCategory: string) {
 
       const newId = await addQuestion(questionToAdd)
       
-      // Update local state
+      // Aktualizacja stanu lokalnego
       setQuestions([...questions, { ...question, id: newId }])
       return newId
     } catch (err) {
@@ -53,7 +54,7 @@ export function useQuestionsManager(initialCategory: string) {
     }
   }
 
-  // Update an existing question
+  // Aktualizacja istniejącego pytania
   const updateExistingQuestion = async (question: Question) => {
     try {
       const questionToUpdate = {
@@ -64,7 +65,7 @@ export function useQuestionsManager(initialCategory: string) {
 
       await updateQuestion(question.id, questionToUpdate)
       
-      // Update local state
+      // Aktualizacja stanu lokalnego
       setQuestions(questions.map(q => 
         q.id === question.id ? question : q
       ))
@@ -77,11 +78,11 @@ export function useQuestionsManager(initialCategory: string) {
     }
   }
 
-  // Delete a question
+  // Usuwanie pytania
   const deleteExistingQuestion = async (id: string) => {
     try {
       await deleteQuestion(id)
-      // Update local state
+      // Aktualizacja stanu lokalnego
       setQuestions(questions.filter(q => q.id !== id))
       return true
     } catch (err) {
@@ -91,16 +92,16 @@ export function useQuestionsManager(initialCategory: string) {
     }
   }
 
-  // Add all questions from the questions.ts file
+  // Dodawanie wszystkich pytań z pliku questions.ts
   const addAllQuestionsFromFile = async (category: string) => {
     try {
       setLoading(true)
       setError(null)
       
-      // Filter questions for the current category
+      // Filtrowanie pytań dla bieżącej kategorii
       const questionsToAdd = allQuestions.filter(q => q.category === category)
       
-      // Check for duplicates
+      // Sprawdzanie duplikatów
       const existingTitles = questions.map(q => q.title)
       const newQuestions = questionsToAdd.filter(q => !existingTitles.includes(q.title))
       
@@ -110,7 +111,7 @@ export function useQuestionsManager(initialCategory: string) {
         return
       }
       
-      // Add each question to Firebase
+      // Dodawanie każdego pytania do Firebase
       const addedQuestions = []
       for (const question of newQuestions) {
         const questionToAdd = {
@@ -124,10 +125,10 @@ export function useQuestionsManager(initialCategory: string) {
         addedQuestions.push({ ...question, id: newId })
       }
       
-      // Update local state
+      // Aktualizacja stanu lokalnego
       setQuestions([...questions, ...addedQuestions])
       
-      // Show success message
+      // Wyświetlanie komunikatu o sukcesie
       setError(`Dodano ${addedQuestions.length} nowych pytań do kategorii ${category}`)
     } catch (err) {
       console.error('Error adding all questions:', err)

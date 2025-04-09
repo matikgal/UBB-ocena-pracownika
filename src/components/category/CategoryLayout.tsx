@@ -16,6 +16,7 @@ export default function CategoryLayout({ categories, onLogout, userData }: Categ
 
   const selectedCategory = slugToCategory(categorySlug || '', categories)
 
+  // Funkcja do przejścia do poprzedniej kategorii
   const handlePreviousCategory = () => {
     const currentIndex = categories.indexOf(selectedCategory)
     if (currentIndex > 0) {
@@ -23,6 +24,7 @@ export default function CategoryLayout({ categories, onLogout, userData }: Categ
     }
   }
 
+  // Funkcja do przejścia do następnej kategorii
   const handleNextCategory = () => {
     const currentIndex = categories.indexOf(selectedCategory)
     if (currentIndex < categories.length - 1) {
@@ -38,11 +40,7 @@ export default function CategoryLayout({ categories, onLogout, userData }: Categ
     navigate('/profil')
   }
 
-  // Add a function to close other components
   const handleCloseOtherComponents = () => {
-  // If you have state for other components in this file, reset them here
-  // For example, if you had profile viewing state:
-  // setIsViewingProfile(false);
   }
 
   return (
@@ -53,12 +51,13 @@ export default function CategoryLayout({ categories, onLogout, userData }: Categ
         selectedCategory={selectedCategory}
         onLogout={onLogout}
         userData={userData}
-        onCloseOtherComponents={handleCloseOtherComponents}  // Add this new prop
+        onCloseOtherComponents={handleCloseOtherComponents}
       />
       <div className="flex-1 flex flex-col pl-8 pr-4 pt-2">
         <div className="mb-4">
           <Header />
         </div>
+        {/* Główna zawartość kategorii */}
         <main className="flex-1 overflow-hidden pb-4">
           <CategoryContent
             selectedCategory={selectedCategory}

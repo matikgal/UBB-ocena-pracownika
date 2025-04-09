@@ -18,6 +18,7 @@ interface EditQuestionsComponentProps {
   onSave: (updatedQuestions: Question[]) => void
 }
 
+// Lista dostępnych kategorii pytań
 const CATEGORIES = [
   'Publikacje dydaktyczne',
   'Podniesienie jakości nauczania',
@@ -27,9 +28,11 @@ const CATEGORIES = [
 ]
 
 export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsComponentProps) {
+  // Sprawdzenie uprawnień użytkownika
   const { hasRole } = useAuth()
   const hasAccess = hasRole('admin') || hasRole('dziekan')
 
+  // Inicjalizacja stanów komponentu
   const [selectedCategory, setSelectedCategory] = useState<string>(CATEGORIES[0])
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
   const [newQuestion, setNewQuestion] = useState<Question>({
@@ -39,6 +42,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
     tooltip: [''],
   })
 
+  // Pobranie funkcji do zarządzania pytaniami z hooka
   const {
     questions,
     loading,
@@ -50,12 +54,14 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
     addAllQuestionsFromFile,
   } = useQuestionsManager(selectedCategory)
 
+  // Obsługa błędów
   useEffect(() => {
     if (error) {
       toast.error(error)
     }
   }, [error])
 
+  // Blokada dostępu dla nieuprawnionych użytkowników
   if (!hasAccess) {
     return (
       <AccessDenied
@@ -66,6 +72,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
     )
   }
 
+  // Wyświetlanie stanu ładowania
   if (loading && questions.length === 0) {
     return (
       <LoadingState
@@ -76,20 +83,22 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
     )
   }
 
+  // Zmiana wybranej kategorii
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category)
     fetchQuestions(category)
   }
 
+  // Zapisanie wszystkich zmian i zamknięcie komponentu
   const handleSaveChanges = () => {
     onSave(questions)
     onClose()
   }
 
+  // Dodawanie nowego pytania
   const handleAddQuestion = async () => {
     if (newQuestion.title.trim() === '') return
 
-    // Directly add the category to the question object
     const questionWithCategory = {
       ...newQuestion,
       category: selectedCategory
@@ -111,10 +120,10 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
     }
   }
 
+  // Aktualizacja istniejącego pytania
   const handleUpdateQuestion = async () => {
     if (!editingQuestion) return
     
-    // Directly add the category to the question object
     const questionWithCategory = {
       ...editingQuestion,
       category: selectedCategory
@@ -130,6 +139,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
     }
   }
 
+  // Usuwanie pytania z potwierdzeniem
   const handleDeleteQuestion = async (questionId: string) => {
     if (!questionId) return
 
@@ -156,6 +166,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
     ), { duration: 10000 })
   }
 
+  // Obsługa zmiany pól pytania
   const handleQuestionChange = (field: string, value: any, isEditing: boolean) => {
     if (isEditing && editingQuestion) {
       setEditingQuestion({
@@ -170,6 +181,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
     }
   }
 
+  // Dodawanie nowej podpowiedzi
   const handleTooltipAdd = (isEditing: boolean) => {
     if (isEditing && editingQuestion) {
       setEditingQuestion({
@@ -184,6 +196,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
     }
   }
 
+  // Zmiana treści podpowiedzi
   const handleTooltipChange = (index: number, value: string, isEditing: boolean) => {
     if (isEditing && editingQuestion) {
       const updatedTooltips = [...editingQuestion.tooltip]
@@ -202,6 +215,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
     }
   }
 
+  // Usuwanie podpowiedzi
   const handleTooltipRemove = (index: number, isEditing: boolean) => {
     if (isEditing && editingQuestion) {
       const updatedTooltips = [...editingQuestion.tooltip]
@@ -220,8 +234,10 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
     }
   }
 
+  // Renderowanie interfejsu użytkownika
   return (
     <div className="h-full p-6 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col mx-0 my-0 text-gray-800">
+      {/* Nagłówek z tytułem i przyciskiem zamknięcia */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold text-gray-800">Edycja pytań</h2>
         <Button
@@ -234,6 +250,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
         </Button>
       </div>
 
+      {/* Wybór kategorii pytań */}
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">Wybierz kategorię</label>
         <select
@@ -251,6 +268,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
 
       <h3 className="text-lg font-semibold mb-4 text-gray-700">Pytania w kategorii: {selectedCategory}</h3>
 
+      {/* Lista istniejących pytań i formularz dodawania nowego */}
       <div className="flex-1 overflow-y-auto mb-4 pr-1">
         <div className="space-y-4 mb-8">
           {questions.map(question => (
@@ -281,6 +299,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
           ))}
         </div>
 
+        {/* Formularz dodawania nowego pytania */}
         <div className="border-t border-gray-100 pt-6">
           <h3 className="text-lg font-semibold mb-4 text-gray-700">Dodaj nowe pytanie</h3>
           <QuestionForm
@@ -296,6 +315,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
         </div>
       </div>
 
+      {/* Przyciski akcji na dole komponentu */}
       <div className="flex justify-end gap-4 mt-4 border-t border-gray-100 pt-4">
         <Button
           onClick={() => addAllQuestionsFromFile(selectedCategory)}

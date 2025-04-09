@@ -9,7 +9,7 @@ interface ProfileRouteProps {
 export const ProfileRoute: React.FC<ProfileRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   
-  // Show loading state
+  // Wyświetlanie stanu ładowania
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -18,11 +18,11 @@ export const ProfileRoute: React.FC<ProfileRouteProps> = ({ children }) => {
     );
   }
   
-  // Redirect to login if not authenticated
+  // Przekierowanie do strony logowania jeśli użytkownik nie jest uwierzytelniony
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
   }
   
-  // If user is authenticated, render the children
+  // Jeśli użytkownik jest uwierzytelniony, renderuj komponenty potomne
   return <>{children}</>;
 };
