@@ -1,4 +1,4 @@
-import { BookOpen, LogOut, Edit, Users } from 'lucide-react'
+import { BookOpen, LogOut, Edit, Users, Database } from 'lucide-react'
 import logo from '../../assets/Logo.svg'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../ui/button'
@@ -11,6 +11,7 @@ import {
 	zajeciaJezykObcy,
 } from '../../lib/questions'
 import { useUserResponses } from '../../services/firebase/useUserResponses'
+import { useRecordsImport } from '../../services/firebase/useRecordsImport'
 
 interface MenuItem {
 	title: string
@@ -71,10 +72,12 @@ export function AppSidebar({
 }: AppSidebarProps) {
 	const { hasRole } = useAuth()
 	const { loadResponses } = useUserResponses()
+	const { importRecords, loading: importLoading } = useRecordsImport()
 
 	// Sprawdzenie uprawnień użytkownika
 	const canEditQuestions = hasRole('admin') || hasRole('dziekan')
 	const canManageLibrary = hasRole('admin') || hasRole('biblioteka') || hasRole('library')
+	const isAdmin = hasRole('admin')
 
 	// Funkcja obsługująca wybór kategorii z odświeżeniem odpowiedzi
 	const handleCategorySelect = (category: string) => {
@@ -100,6 +103,14 @@ export function AppSidebar({
 			onManageLibrary()
 		} else {
 			console.error('onManageLibrary is not a function:', onManageLibrary)
+		}
+	}
+
+	const handleImportRecords = async () => {
+		if (importLoading) return;
+		
+		if (confirm('Czy na pewno chcesz zaimportować rekordy z pliku records.json do bazy danych Firebase?')) {
+			await importRecords();
 		}
 	}
 
@@ -159,6 +170,17 @@ export function AppSidebar({
 							<Users className="h-4 w-4 mr-2" />
 							Zarządzaj użytkownikami
 						</Button>
+						
+						{isAdmin && (
+							<Button
+								variant="outline"
+								className="w-full cursor-pointer border-gray-300 text-gray-700 hover:bg-white hover:text-blue-700 transition-colors"
+								onClick={handleImportRecords}
+								disabled={importLoading}>
+								<Database className="h-4 w-4 mr-2" />
+								{importLoading ? 'Importowanie...' : 'Importuj rekordy'}
+							</Button>
+						)}
 					</div>
 				)}
 
