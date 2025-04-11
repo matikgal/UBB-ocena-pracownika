@@ -1,17 +1,11 @@
 import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../../firebase';
 import records from '../../lib/records.json';
+import { Article } from '../../types';
 
-export interface Record {
-  id: string;
-  title: string;
-  authors: string[];
-  oa_info: string;
-  pk: string;
-  ww: string;
-}
+// Remove the Record interface since we'll use Article from types
 
-export async function addRecordToFirestore(record: Record): Promise<string> {
+export async function addRecordToFirestore(record: Article): Promise<string> {
   try {
     // Check if record already exists
     const articlesRef = collection(db, 'Articles');

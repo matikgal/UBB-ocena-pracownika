@@ -9,10 +9,16 @@ export interface UserData {
 }
 
 export interface Article {
+  id?: string;
   title: string;
+  authors?: string[];
+  oa_info?: string;
+  pk?: string;
+  ww?: string;
   journal?: string;
   year?: number;
   points: number;
+  url?: string;
 }
 
 export interface UserResponse {

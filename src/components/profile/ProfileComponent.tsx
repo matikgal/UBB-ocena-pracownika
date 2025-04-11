@@ -6,6 +6,7 @@ import { Separator } from '../ui/separator'
 import { User, Mail, Award, BookOpen } from 'lucide-react'
 import { UserResponse } from '../../types'
 import { Button } from '../ui/button'
+import { ArticlesCarousel } from './ArticlesCarousel'
 
 interface ProfileComponentProps {
 	userEmail?: string
@@ -146,6 +147,9 @@ export function ProfileComponent({ userEmail, onClose }: ProfileComponentProps) 
 			</div>
 
 			<Separator className="mb-6" />
+
+			{/* Add the ArticlesCarousel component here */}
+			<ArticlesCarousel userName={profileData?.name || userData?.name || ''} />
 
 			{/* Sekcja statystyk */}
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">

@@ -92,14 +92,11 @@ function AppContent() {
 	}
 
 	const handleManageLibrary = () => {
-		if (canManageLibrary) {
-			console.log('Setting isManagingLibrary to true')
-			setIsManagingLibrary(true)
-			setIsManagingUsers(false)
-			setIsEditingQuestions(false)
-		} else {
-			console.log('User does not have library access')
-		}
+		// Remove role check - make it available to everyone
+		console.log('Setting isManagingLibrary to true')
+		setIsManagingLibrary(true)
+		setIsManagingUsers(false)
+		setIsEditingQuestions(false)
 	}
 
 	// Funkcje zamykające poszczególne widoki
