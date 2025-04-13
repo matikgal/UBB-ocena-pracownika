@@ -148,9 +148,6 @@ export function ProfileComponent({ userEmail, onClose }: ProfileComponentProps) 
 
 			<Separator className="mb-6" />
 
-			{/* Add the ArticlesCarousel component here */}
-			<ArticlesCarousel userName={profileData?.name || userData?.name || ''} />
-
 			{/* Sekcja statystyk */}
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
 				<div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
@@ -192,6 +189,14 @@ export function ProfileComponent({ userEmail, onClose }: ProfileComponentProps) 
 					</div>
 				</div>
 			</div>
+
+			{/* ArticlesCarousel component placed here, before the "Punkty według kategorii" section */}
+			{responses.length > 0 && (
+			  <ArticlesCarousel 
+			    userName={profileData?.name || userData?.name || ''} 
+			    responses={responses}
+			  />
+			)}
 
 			{/* Sekcja kategorii */}
 			<h3 className="text-lg font-semibold text-gray-900 mb-4">Punkty według kategorii</h3>
@@ -278,6 +283,20 @@ export function ProfileComponent({ userEmail, onClose }: ProfileComponentProps) 
 					)}
 				</div>
 			)}
+			<Separator className="mb-6" />
+
+			
+			{/* Remove the duplicate ArticlesCarousel at the bottom */}
+			<Separator className="mb-6" />
+			
+			{/* Delete or comment out this duplicate carousel
+			{responses.length > 0 && (
+			  <ArticlesCarousel 
+			    userName={profileData?.name || userData?.name || ''} 
+			    responses={responses}
+			  />
+			)}
+			*/}
 		</div>
 	)
 }
