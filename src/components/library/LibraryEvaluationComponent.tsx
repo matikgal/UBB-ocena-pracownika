@@ -20,7 +20,7 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 	
 	const { userData } = useAuth()
 	
-	// Pobieranie artykułów przy montowaniu komponentu
+	
 	useEffect(() => {
 		const fetchArticles = async () => {
 			try {
@@ -28,10 +28,9 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 				setError(null);
 				
 				if (userData?.name) {
-					// Extract first name for better matching
-					const nameParts = userData.name.split(' ');
-					if (nameParts.length > 0) {
-						const authorName = nameParts[0]; // Use first name for search
+					
+					const authorName = userData.name.trim();
+					if (authorName) {
 						const fetchedArticles = await getArticlesByAuthor(authorName);
 						setArticles(fetchedArticles);
 					} else {
@@ -51,7 +50,7 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 		fetchArticles();
 	}, [userData?.name]);
 
-	// Użycie hooka paginacji z artykułami
+	
 	const { 
 		currentPage, 
 		setCurrentPage, 
@@ -61,7 +60,7 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 
 	return (
 		<div className="h-full p-6 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col overflow-auto">
-			{/* Nagłówek komponentu */}
+			
 			<div className="flex justify-between items-center mb-6">
 				<h2 className="text-2xl font-semibold text-gray-800">Moje artykuły naukowe</h2>
 				{onClose && (
@@ -75,17 +74,16 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 				)}
 			</div>
 
-			{/* Wyświetlanie błędów */}
 			{error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md border border-red-100">{error}</div>}
 
-			{/* Stan ładowania */}
+		
 			{loading ? (
 				<div className="flex items-center justify-center h-40">
 					<p>Ładowanie artykułów...</p>
 				</div>
 			) : (
 				<>
-					{/* Lista artykułów */}
+				
 					<div className="flex-1 overflow-y-auto">
 						{articles.length === 0 ? (
 							<div className="text-center py-10 text-gray-500">
@@ -186,39 +184,6 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 					)}
 				</>
 			)}
-
-			{/* Przycisk odświeżania listy */}
-			<div className="mt-4">
-				<Button 
-					onClick={() => {
-						setLoading(true);
-						if (userData?.name) {
-							const nameParts = userData.name.split(' ');
-							if (nameParts.length > 0) {
-								const authorName = nameParts[0];
-								getArticlesByAuthor(authorName)
-									.then(fetchedArticles => {
-										setArticles(fetchedArticles);
-										setLoading(false);
-									})
-									.catch(err => {
-										console.error('Error refreshing articles:', err);
-										setError('Nie udało się odświeżyć artykułów');
-										setLoading(false);
-									});
-							} else {
-								setLoading(false);
-							}
-						} else {
-							setLoading(false);
-						}
-					}} 
-					variant="default" 
-					className="w-full bg-blue-600 hover:bg-blue-700"
-				>
-					Odśwież listę
-				</Button>
-			</div>
 		</div>
 	)
 }

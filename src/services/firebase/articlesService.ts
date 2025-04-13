@@ -7,15 +7,24 @@ export async function getArticlesByAuthor(authorName: string): Promise<Article[]
     const articlesRef = collection(db, 'Articles');
     const articlesSnapshot = await getDocs(articlesRef);
     
-    // Filter articles where the author name is in the authors array
+   
+    const nameParts = authorName.toLowerCase().split(' ').filter(part => part.length > 1);
+    
+  
     const authorArticles = articlesSnapshot.docs
       .map(doc => ({ id: doc.id, ...doc.data() } as Article))
-      .filter(article => 
-        article.authors && 
-        article.authors.some(author => 
-          author.toLowerCase().includes(authorName.toLowerCase())
-        )
-      );
+      .filter(article => {
+        if (!article.authors || !Array.isArray(article.authors)) {
+          return false;
+        }
+        
+       
+        return article.authors.some(author => {
+          const authorLower = author.toLowerCase();
+      
+          return nameParts.every(part => authorLower.includes(part));
+        });
+      });
     
     return authorArticles;
   } catch (error) {
