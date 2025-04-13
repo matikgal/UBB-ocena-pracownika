@@ -3,7 +3,7 @@ import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../../../firebase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../ui/button'
-import { User, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { Input } from '../ui/input'
 import { Separator } from '../ui/separator'
 import UserResponsesList from './UserResponsesList'
@@ -19,18 +19,14 @@ export interface UserData {
 }
 
 export function UserManagementComponent({ onClose }: { onClose: () => void }) {
-	// Inicjalizacja stanów komponentu
 	const [users, setUsers] = useState<UserData[]>([])
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 	const [searchTerm, setSearchTerm] = useState('')
 	const [selectedUser, setSelectedUser] = useState<UserData | null>(null)
-
-	// Sprawdzenie uprawnień użytkownika
 	const { hasRole } = useAuth()
 	const hasAccess = hasRole('admin') || hasRole('dziekan')
 
-	// Pobieranie listy użytkowników przy montowaniu komponentu
 	useEffect(() => {
 		fetchUsers()
 	}, [])
@@ -48,7 +44,7 @@ export function UserManagementComponent({ onClose }: { onClose: () => void }) {
 			for (const userDoc of userSnapshot.docs) {
 				const userData = userDoc.data() as UserData
 
-				// Zliczanie odpowiedzi dla każdego użytkownika
+				// Count responses for each user
 				const responsesCollection = collection(db, 'Users', userDoc.id, 'responses')
 				const responsesSnapshot = await getDocs(responsesCollection)
 
@@ -70,7 +66,6 @@ export function UserManagementComponent({ onClose }: { onClose: () => void }) {
 		}
 	}
 
-	// Filtrowanie użytkowników na podstawie wyszukiwanego tekstu
 	const filteredUsers = users.filter(
 		user =>
 			user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -78,12 +73,12 @@ export function UserManagementComponent({ onClose }: { onClose: () => void }) {
 			(user.lastName && user.lastName.toLowerCase().includes(searchTerm.toLowerCase()))
 	)
 
-	// Jeśli użytkownik nie ma dostępu, wyświetl komponent odmowy dostępu
+	// If user doesn't have access, show access denied component
 	if (!hasAccess) {
 		return (
-			<div className="h-full p-6 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col  overflow-auto">
+			<div className="h-full p-6 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col mx-2 my-2 overflow-auto">
 				<PageHeader title="Zarządzanie użytkownikami" onClose={onClose} />
-				<AccessDenied
+				<AccessDenied 
 					title="Brak dostępu"
 					message="Tylko użytkownicy z rolą dziekana lub administratora mają dostęp do zarządzania użytkownikami."
 					onClose={onClose}
@@ -93,13 +88,12 @@ export function UserManagementComponent({ onClose }: { onClose: () => void }) {
 	}
 
 	return (
-		<div className="h-full p-6 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col  overflow-auto">
+		<div className="h-full p-6 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col mx-2 my-2 overflow-auto">
 			<PageHeader title="Zarządzanie użytkownikami" onClose={onClose} />
-
+			
 			{error && <div className="mb-4 p-3 bg-red-50 text-red-600 border border-red-100 rounded-md">{error}</div>}
 
 			{selectedUser ? (
-				// Widok szczegółów użytkownika
 				<div className="flex flex-col h-full">
 					<div className="flex items-center justify-between mb-4">
 						<Button variant="outline" onClick={() => setSelectedUser(null)} className="text-gray-600">
@@ -113,7 +107,6 @@ export function UserManagementComponent({ onClose }: { onClose: () => void }) {
 					<UserResponsesList userEmail={selectedUser.email} />
 				</div>
 			) : (
-				// Widok listy użytkowników
 				<>
 					<div className="mb-6 relative">
 						<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -129,7 +122,6 @@ export function UserManagementComponent({ onClose }: { onClose: () => void }) {
 					</div>
 
 					{loading ? (
-						// Stan ładowania
 						<div className="flex items-center justify-center h-64">
 							<div className="text-gray-500 flex flex-col items-center">
 								<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 mb-2"></div>
@@ -137,7 +129,6 @@ export function UserManagementComponent({ onClose }: { onClose: () => void }) {
 							</div>
 						</div>
 					) : (
-						// Lista użytkowników
 						<div className="overflow-y-auto flex-1">
 							{filteredUsers.length === 0 ? (
 								<div className="text-center py-10 text-gray-500">Nie znaleziono użytkowników</div>

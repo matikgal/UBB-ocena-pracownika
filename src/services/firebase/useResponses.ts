@@ -1,4 +1,4 @@
-import { getDocs, collection, query, where, doc, updateDoc, deleteDoc, addDoc, serverTimestamp } from "@firebase/firestore"
+import { getDocs, collection, query, where, doc, updateDoc, deleteDoc, serverTimestamp } from "@firebase/firestore"
 import { db } from "../../../firebase"
 import { useState, useCallback } from "react"
 import { toast } from '../../components/common/Toast';
@@ -7,7 +7,6 @@ import { Article, UserResponse } from "../../types"
 
 
 export function useResponses() {
-  // Inicjalizacja stanów
   const [responses, setResponses] = useState<UserResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -15,18 +14,17 @@ export function useResponses() {
   const { userData } = useAuth()
 
 
-  // Pobieranie wszystkich odpowiedzi dotyczących autorstwa artykułów
   const fetchResponses = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
 
 
-      // Pobieranie odpowiedzi wszystkich użytkowników dla konkretnego pytania
+      // Query all users' responses for the specific question
       const allResponses: UserResponse[] = []
 
 
-      // Pobieranie wszystkich użytkowników
+      // Get all users
       const usersSnapshot = await getDocs(collection(db, 'Users'))
 
 
@@ -35,7 +33,7 @@ export function useResponses() {
         const userData = userDoc.data()
 
 
-        // Pobieranie odpowiedzi dla tego użytkownika
+        // Query responses for this user
         const responsesRef = collection(db, 'Users', userEmail, 'responses')
         const q = query(
           responsesRef,
@@ -81,7 +79,6 @@ export function useResponses() {
   }, [])
 
 
-  // Zatwierdzanie odpowiedzi użytkownika
   const approveResponse = useCallback(async (responseId: string, userEmail: string) => {
     try {
       setLoading(true)
@@ -89,7 +86,6 @@ export function useResponses() {
       
       const responseRef = doc(db, 'Users', userEmail, 'responses', responseId)
       
-      // Aktualizacja statusu odpowiedzi w bazie danych
       await updateDoc(responseRef, {
         status: 'approved',
         verifiedBy: userData?.email || 'unknown',
@@ -97,7 +93,6 @@ export function useResponses() {
         updatedAt: serverTimestamp()
       })
       
-      // Aktualizacja stanu lokalnego
       setResponses(prev => 
         prev.map(response => 
           response.id === responseId && response.userEmail === userEmail
@@ -124,7 +119,6 @@ export function useResponses() {
   }, [userData])
 
 
-  // Odrzucanie odpowiedzi użytkownika z podaniem powodu
   const rejectResponse = useCallback(async (responseId: string, userEmail: string, rejectionReason: string) => {
     try {
       setLoading(true)
@@ -132,7 +126,6 @@ export function useResponses() {
       
       const responseRef = doc(db, 'Users', userEmail, 'responses', responseId)
       
-      // Aktualizacja statusu odpowiedzi w bazie danych
       await updateDoc(responseRef, {
         status: 'rejected',
         verifiedBy: userData?.email || 'unknown',
@@ -141,7 +134,6 @@ export function useResponses() {
         updatedAt: serverTimestamp()
       })
       
-      // Aktualizacja stanu lokalnego
       setResponses(prev => 
         prev.map(response => 
           response.id === responseId && response.userEmail === userEmail
@@ -169,7 +161,6 @@ export function useResponses() {
   }, [userData])
 
 
-  // Dodawanie artykułu do odpowiedzi użytkownika
   const addArticleToResponse = useCallback(async (responseId: string, userEmail: string, article: Article) => {
     try {
       setLoading(true)
@@ -182,16 +173,13 @@ export function useResponses() {
         throw new Error('Response not found')
       }
       
-      // Dodanie nowego artykułu do istniejącej listy
       const updatedArticles = [...(response.articles || []), article]
       
-      // Aktualizacja dokumentu w bazie danych
       await updateDoc(responseRef, {
         articles: updatedArticles,
         updatedAt: serverTimestamp()
       })
       
-      // Aktualizacja stanu lokalnego
       setResponses(prev => 
         prev.map(r => 
           r.id === responseId && r.userEmail === userEmail
@@ -216,7 +204,6 @@ export function useResponses() {
   }, [responses])
 
 
-  // Usuwanie artykułu z odpowiedzi użytkownika
   const removeArticleFromResponse = useCallback(async (responseId: string, userEmail: string, articleIndex: number) => {
     try {
       setLoading(true)
@@ -229,17 +216,14 @@ export function useResponses() {
         throw new Error('Response or articles not found')
       }
       
-      // Usunięcie artykułu z listy
       const updatedArticles = [...response.articles]
       updatedArticles.splice(articleIndex, 1)
       
-      // Aktualizacja dokumentu w bazie danych
       await updateDoc(responseRef, {
         articles: updatedArticles,
         updatedAt: serverTimestamp()
       })
       
-      // Aktualizacja stanu lokalnego
       setResponses(prev => 
         prev.map(r => 
           r.id === responseId && r.userEmail === userEmail
@@ -264,7 +248,6 @@ export function useResponses() {
   }, [responses])
 
 
-  // Usuwanie całej odpowiedzi użytkownika
   const deleteResponse = useCallback(async (responseId: string, userEmail: string) => {
     try {
       setLoading(true)
@@ -272,10 +255,8 @@ export function useResponses() {
       
       const responseRef = doc(db, 'Users', userEmail, 'responses', responseId)
       
-      // Usunięcie dokumentu z bazy danych
       await deleteDoc(responseRef)
       
-      // Aktualizacja stanu lokalnego
       setResponses(prev => prev.filter(r => !(r.id === responseId && r.userEmail === userEmail)))
       
       toast.success('Response deleted successfully')
@@ -290,7 +271,6 @@ export function useResponses() {
   }, [])
 
 
-  // Zwracanie funkcji i stanów do użycia w komponentach
   return {
     responses,
     loading,

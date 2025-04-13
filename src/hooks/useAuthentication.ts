@@ -1,25 +1,25 @@
 import { useState } from 'react'
 
 interface AuthenticationHookResult {
-	isLoggedIn: boolean
-	login: (email: string, password: string) => void
-	logout: () => void
+  isLoggedIn: boolean
+  login: (email: string, password: string) => void
+  logout: () => void
 }
 
 export function useAuthentication(): AuthenticationHookResult {
-	const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
-	const login = (email: string, password: string) => {
-		setIsLoggedIn(true)
-	}
+  const login = () => {
+    setIsLoggedIn(true)
+  }
 
-	const logout = () => {
-		setIsLoggedIn(false)
-	}
+  const logout = () => {
+    setIsLoggedIn(false)
+  }
 
-	return {
-		isLoggedIn,
-		login,
-		logout,
-	}
+  return {
+    isLoggedIn,
+    login,
+    logout
+  }
 }

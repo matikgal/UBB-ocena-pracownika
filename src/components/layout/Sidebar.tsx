@@ -76,7 +76,7 @@ export function AppSidebar({
 
 	// Sprawdzenie uprawnień użytkownika
 	const canEditQuestions = hasRole('admin') || hasRole('dziekan')
-	// Remove library role check - make it available to everyone
+
 	const canManageLibrary = true
 	const isAdmin = hasRole('admin')
 

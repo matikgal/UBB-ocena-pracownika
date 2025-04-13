@@ -21,7 +21,6 @@ export default function QuestionsComponent({
 	onNextCategory,
 	categories
 }: QuestionsComponentProps) {
-	// Pobieranie danych i funkcji z hooka useQuestions
 	const {
 		questions,
 		questionStates,
@@ -34,26 +33,25 @@ export default function QuestionsComponent({
 		handleDeleteResponse 
 	} = useQuestions(selectedCategory)
 
-	// Wyświetlanie powiadomienia o sukcesie
+	// Show toast when success message changes
 	useEffect(() => {
 		if (successMessage) {
 			toast.success(successMessage);
 		}
 	}, [successMessage]);
 
-	// Wyświetlanie powiadomienia o błędzie
+	// Show toast when error changes
 	useEffect(() => {
 		if (error) {
 			toast.error(error);
 		}
 	}, [error]);
 
-	// Określenie czy to pierwsza lub ostatnia kategoria
+	// Determine if this is the first or last category
 	const currentIndex = categories.indexOf(selectedCategory)
 	const isFirstCategory = currentIndex === 0
 	const isLastCategory = currentIndex === categories.length - 1
 
-	// Wyświetlanie stanu ładowania
 	if (loading) {
 		return <LoadingState 
 			title="Ładowanie pytań"
@@ -61,8 +59,8 @@ export default function QuestionsComponent({
 		/>
 	}
 
-	// Wyświetlanie informacji o braku pytań
 	if (questions.length === 0) {
+		// Show toast for empty state and still render the EmptyState component
 		toast.info(`Brak pytań w kategorii: ${selectedCategory}`);
 		return (
 			<EmptyState 
@@ -75,7 +73,6 @@ export default function QuestionsComponent({
 
 	return (
 		<div className="bg-white rounded-lg shadow-sm p-6 h-full flex flex-col">
-			{/* Nagłówek z tytułem kategorii i nawigacją */}
 			<div className="flex justify-between items-center mb-6">
 				<h2 className="text-xl font-semibold text-gray-800">{selectedCategory}</h2>
 				<CategoryNavigation
@@ -86,7 +83,6 @@ export default function QuestionsComponent({
 				/>
 			</div>
 
-			{/* Lista pytań z możliwością przewijania */}
 			<div className="flex-1 overflow-y-auto pr-2">
 				<div className="space-y-4">
 					{questions.map(question => (
@@ -103,7 +99,6 @@ export default function QuestionsComponent({
 				</div>
 			</div>
 
-			{/* Przycisk zapisywania odpowiedzi */}
 			<div className="mt-6 pt-4 border-t border-gray-200">
 				<Button onClick={handleSaveResponses} className="w-full">
 					Zapisz odpowiedzi

@@ -8,7 +8,7 @@ interface DeleteConfirmationProps {
   onConfirm: () => void
 }
 
-export function DeleteConfirmation({ t, userName, onCancel, onConfirm }: DeleteConfirmationProps) {
+export function DeleteConfirmation({  userName, onCancel, onConfirm }: DeleteConfirmationProps) {
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 max-w-md mx-auto">
       <div className="flex items-center gap-3 mb-4">

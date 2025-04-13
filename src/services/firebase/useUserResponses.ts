@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { collection, addDoc, updateDoc, doc, deleteDoc, getDocs, query, where, setDoc, getDoc, orderBy } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, deleteDoc, getDocs, query, where, getDoc,  } from 'firebase/firestore';
 import { db } from '../../../firebase';
 
-// Interfejs definiujący strukturę odpowiedzi użytkownika z dodatkowymi polami do weryfikacji
 export interface UserResponse {
   id?: string;
   questionId: string;
@@ -12,24 +11,22 @@ export interface UserResponse {
   category: string;
   createdAt?: Date;
   updatedAt?: Date;
-  status?: 'pending' | 'approved' | 'rejected';
-  verifiedBy?: string;
-  verifiedAt?: Date;
-  rejectionReason?: string | null;
+  status?: 'pending' | 'approved' | 'rejected'; // New status field
+  verifiedBy?: string; // Track who verified the response
+  verifiedAt?: Date; // When it was verified
+  rejectionReason?: string | null; // Optional reason for rejection - add null to the type
 }
 
 export function useUserResponses() {
-  // Pobieranie danych użytkownika z kontekstu uwierzytelniania
   const { userData } = useAuth();
-  // Inicjalizacja stanów
   const [responses, setResponses] = useState<UserResponse[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [responsesByCategory, setResponsesByCategory] = useState<Record<string, UserResponse[]>>({});
-  // Referencja do śledzenia, czy odpowiedzi są już ładowane
+  // Add a ref to track if responses are already being loaded
   const loadingRef = useRef<Record<string, boolean>>({});
 
-  // Funkcja pobierająca odpowiedzi użytkownika z mechanizmem buforowania
+  // Fetch user responses with caching
   const loadResponses = async (category?: string) => {
     if (!userData?.email) {
       setError('User not authenticated');
@@ -37,28 +34,28 @@ export function useUserResponses() {
     }
   
     try {
-      // Sprawdzenie czy to żądanie odświeżenia (kategoria zawiera '?refresh=')
+      // Check if this is a refresh request (category contains '?refresh=')
       const isRefreshRequest = category && category.includes('?refresh=');
       
-      // Wyodrębnienie właściwej nazwy kategorii jeśli to żądanie odświeżenia
+      // Extract the actual category name if it's a refresh request
       const actualCategory = isRefreshRequest 
         ? category.split('?')[0] 
         : category;
       
-      // Zapobieganie duplikatom zapytań dla tej samej kategorii (chyba że to odświeżenie)
+      // Prevent duplicate fetches for the same category (unless it's a refresh request)
       if (!isRefreshRequest && actualCategory && loadingRef.current[actualCategory]) {
         console.log(`Using in-progress fetch for category: ${actualCategory}`);
         return responsesByCategory[actualCategory] || [];
       }
       
-      // Użycie bufora tylko jeśli to nie jest żądanie odświeżenia
+      // Use cache only if it's not a refresh request
       if (!isRefreshRequest && actualCategory && responsesByCategory[actualCategory] && responsesByCategory[actualCategory].length > 0) {
         console.log(`Using cached responses for category: ${actualCategory}, count: ${responsesByCategory[actualCategory].length}`);
         setResponses(responsesByCategory[actualCategory]);
         return responsesByCategory[actualCategory];
       }
 
-      // Oznaczenie tej kategorii jako ładowanej
+      // Mark this category as loading
       if (actualCategory) {
         loadingRef.current[actualCategory] = true;
       }
@@ -71,23 +68,22 @@ export function useUserResponses() {
       
       let q;
       if (actualCategory) {
-        // Zapytanie tylko z klauzulą where, bez orderBy które może powodować problemy
+        // Fix: Use only where clause without orderBy which might cause issues
         q = query(
           responsesCollectionRef,
           where('category', '==', actualCategory)
         );
       } else {
-        // Zapytanie bez orderBy, aby uniknąć potencjalnych problemów z indeksami
+        // Fix: Remove orderBy to avoid potential index issues
         q = query(responsesCollectionRef);
       }
       
       const querySnapshot = await getDocs(q);
       const fetchedResponses: UserResponse[] = [];
   
-      // Przetwarzanie wyników zapytania
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-        // Obsługa potencjalnie brakujących lub nieprawidłowych pól daty
+        // Fix: Handle potential missing or invalid date fields
         const createdAt = data.createdAt ? 
           (data.createdAt instanceof Date ? data.createdAt : data.createdAt.toDate()) : 
           undefined;
@@ -115,7 +111,7 @@ export function useUserResponses() {
       
       console.log(`Fetched ${fetchedResponses.length} responses for category: ${actualCategory || 'all'}`);
       
-      // Sortowanie odpowiedzi według daty utworzenia (sortowanie po stronie klienta)
+      // Fix: Sort responses by createdAt date if available (client-side sorting)
       const sortedResponses = fetchedResponses.sort((a, b) => {
         if (!a.createdAt) return 1;
         if (!b.createdAt) return -1;
@@ -124,7 +120,7 @@ export function useUserResponses() {
       
       setResponses(sortedResponses);
       
-      // Aktualizacja bufora świeżymi danymi
+      // Update cache with fresh data
       if (actualCategory) {
         setResponsesByCategory(prev => ({
           ...prev,
@@ -139,7 +135,7 @@ export function useUserResponses() {
       return [];
     } finally {
       setLoading(false);
-      // Oznaczenie tej kategorii jako już nie ładowanej
+      // Mark this category as no longer loading
       if (category) {
         const actualCategory = category && category.includes('?refresh=') 
           ? category.split('?')[0] 
@@ -151,14 +147,14 @@ export function useUserResponses() {
     }
   };
 
-  // Funkcja zapisująca odpowiedź użytkownika
+  // Save a user response
   const saveResponse = async (questionId: string, questionTitle: string, points: number, category: string, questionStatus?: string) => {
     if (!userData?.email) {
       setError('User not authenticated');
       return null;
     }
   
-    // Zapobieganie zapisowi jeśli pytanie jest już zatwierdzone
+    // Prevent saving if the question is already approved
     if (questionStatus === 'approved') {
       setError('Nie można edytować zatwierdzonych odpowiedzi');
       return null;
@@ -171,7 +167,7 @@ export function useUserResponses() {
       const userEmail = userData.email;
       const responsesCollectionRef = collection(db, 'Users', userEmail, 'responses');
       
-      // Sprawdzenie czy odpowiedź na to pytanie już istnieje
+      // Check if response for this question already exists
       const q = query(
         responsesCollectionRef,
         where('questionId', '==', questionId)
@@ -182,28 +178,28 @@ export function useUserResponses() {
       let responseId: string;
       
       if (!querySnapshot.empty) {
-        // Aktualizacja istniejącej odpowiedzi
+        // Update existing response
         const existingResponseDoc = querySnapshot.docs[0];
         const existingData = existingResponseDoc.data();
         
-        // Sprawdzenie czy istniejąca odpowiedź jest zatwierdzona
+        // Check if the existing response is approved
         if (existingData.status === 'approved') {
           setError('Nie można edytować zatwierdzonych odpowiedzi');
           return null;
         }
         
-        // Aktualizacja istniejącej odpowiedzi
+        // Update existing response
         await updateDoc(doc(db, 'Users', userEmail, 'responses', existingResponseDoc.id), {
           points: points,
           updatedAt: new Date(),
-          status: 'pending', // Resetowanie statusu do "oczekujące" po aktualizacji
+          status: 'pending', // Reset status to pending when updated
           verifiedBy: null,
           verifiedAt: null,
           rejectionReason: null
         });
         responseId = existingResponseDoc.id;
       } else {
-        // Dodanie nowej odpowiedzi
+        // Add new response
         const response: UserResponse = {
           questionId,
           questionTitle,
@@ -211,14 +207,14 @@ export function useUserResponses() {
           category,
           createdAt: new Date(),
           updatedAt: new Date(),
-          status: 'pending' // Ustawienie początkowego statusu na "oczekujące"
+          status: 'pending' // Set initial status to pending
         };
         
         const docRef = await addDoc(responsesCollectionRef, response);
         responseId = docRef.id;
       }
       
-      // Wymuszenie odświeżenia odpowiedzi dla tej kategorii, aby zaktualizować bufor
+      // Force refresh responses for this category to update the cache
       await loadResponses(`${category}?refresh=${new Date().getTime()}`);
       
       return responseId;
@@ -231,7 +227,7 @@ export function useUserResponses() {
     }
   };
 
-  // Funkcja usuwająca odpowiedź użytkownika
+  // Delete a user response
   const deleteResponse = async (responseId: string) => {
     if (!userData?.email) {
       setError('User not authenticated');
@@ -244,7 +240,7 @@ export function useUserResponses() {
       
       const userEmail = userData.email;
       
-      // Pobranie odpowiedzi przed usunięciem, aby wiedzieć którą kategorię odświeżyć
+      // Get the response before deleting to know which category to refresh
       const responseDoc = await getDoc(doc(db, 'Users', userEmail, 'responses', responseId));
       
       if (!responseDoc.exists()) {
@@ -255,13 +251,12 @@ export function useUserResponses() {
       const responseData = responseDoc.data();
       const category = responseData.category;
       
-      // Usunięcie odpowiedzi z bazy danych
       await deleteDoc(doc(db, 'Users', userEmail, 'responses', responseId));
       
-      // Aktualizacja stanu lokalnego
+      // Update local state
       setResponses(prev => prev.filter(r => r.id !== responseId));
       
-      // Wymuszenie odświeżenia odpowiedzi dla tej kategorii, aby zaktualizować bufor
+      // Force refresh responses for this category to update the cache
       if (category) {
         await loadResponses(`${category}?refresh=${new Date().getTime()}`);
       }
@@ -276,7 +271,7 @@ export function useUserResponses() {
     }
   };
 
-  // Funkcja weryfikująca odpowiedź użytkownika (zatwierdzenie lub odrzucenie)
+  // Verify a user response (approve or reject)
   const verifyResponse = async (
     userEmail: string, 
     responseId: string, 
@@ -294,33 +289,33 @@ export function useUserResponses() {
       
       const verifierEmail = userData.email;
       
-      // Utworzenie obiektu aktualizacji z odpowiednimi typami
+      // Create update object with proper types
       const updateData: Record<string, any> = {
         status: status,
         verifiedBy: verifierEmail,
         verifiedAt: new Date()
       };
       
-      // Dodanie powodu odrzucenia tylko dla statusu "odrzucone" i upewnienie się, że to null zamiast undefined
+      // Only add rejectionReason for rejected status and ensure it's null instead of undefined
       if (status === 'rejected') {
-        updateData.rejectionReason = rejectionReason || null;
+        updateData.rejectionReason = rejectionReason || null; // Use null instead of undefined
       } else {
-        updateData.rejectionReason = null;
+        updateData.rejectionReason = null; // Always use null instead of undefined
       }
       
-      // Aktualizacja dokumentu w bazie danych
       await updateDoc(doc(db, 'Users', userEmail, 'responses', responseId), updateData);
       
-      // Jeśli przeglądamy odpowiedzi tego użytkownika, aktualizujemy stan lokalny
+      // If we're viewing this user's responses, update the local state
       if (responses.some(r => r.id === responseId)) {
         setResponses(prev => prev.map(r => {
           if (r.id === responseId) {
-            // Utworzenie obiektu z odpowiednimi typami
+            // Create a properly typed object
             const updatedResponse: UserResponse = {
               ...r,
               status,
               verifiedBy: verifierEmail,
               verifiedAt: new Date(),
+              // Use null instead of undefined
               rejectionReason: status === 'rejected' ? (rejectionReason || null) : null
             };
             return updatedResponse;
@@ -339,7 +334,7 @@ export function useUserResponses() {
     }
   };
   
-  // Zwracanie funkcji i stanów do użycia w komponentach
+  // Include the new function in the return value
   return {
     responses,
     loading,

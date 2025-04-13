@@ -4,6 +4,7 @@ import { Textarea } from "../../ui/textarea"
 import { Plus, Trash } from "lucide-react"
 import { Question } from "../../../types"
 
+// First, update the QuestionForm component to accept ReactNode instead of string
 interface QuestionFormProps {
   question: Question
   isEditing: boolean
@@ -13,12 +14,11 @@ interface QuestionFormProps {
   onTooltipRemove: (index: number) => void
   onSave: () => void
   onCancel?: () => void
-  saveButtonText?: React.ReactNode
+  saveButtonText?: React.ReactNode // Change from string to ReactNode
 }
 
 export function QuestionForm({
   question,
-  isEditing,
   onQuestionChange,
   onTooltipAdd,
   onTooltipChange,
