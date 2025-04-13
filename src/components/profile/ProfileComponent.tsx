@@ -192,10 +192,7 @@ export function ProfileComponent({ userEmail, onClose }: ProfileComponentProps) 
 
 			{/* ArticlesCarousel component placed here, before the "Punkty według kategorii" section */}
 			{responses.length > 0 && (
-			  <ArticlesCarousel 
-			    userName={profileData?.name || userData?.name || ''} 
-			    responses={responses}
-			  />
+				<ArticlesCarousel userName={profileData?.name || userData?.name || ''} responses={responses} />
 			)}
 
 			{/* Sekcja kategorii */}
@@ -283,20 +280,6 @@ export function ProfileComponent({ userEmail, onClose }: ProfileComponentProps) 
 					)}
 				</div>
 			)}
-			<Separator className="mb-6" />
-
-			
-			{/* Remove the duplicate ArticlesCarousel at the bottom */}
-			<Separator className="mb-6" />
-			
-			{/* Delete or comment out this duplicate carousel
-			{responses.length > 0 && (
-			  <ArticlesCarousel 
-			    userName={profileData?.name || userData?.name || ''} 
-			    responses={responses}
-			  />
-			)}
-			*/}
 		</div>
 	)
 }
