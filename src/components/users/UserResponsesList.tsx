@@ -240,11 +240,8 @@ export default function UserResponsesList({ userEmail }: { userEmail: string }) 
           <h3 className="font-medium text-blue-800">Podsumowanie punktów</h3>
           <span className="text-lg font-bold text-blue-800">{totalPoints} pkt</span>
         </div>
-        {canVerify && (
-          <p className="text-sm text-blue-600 mt-1">
-            Uwaga: Wyświetlane są tylko punkty z zatwierdzonych odpowiedzi.
-          </p>
-        )}
+        
+        
       </div>
       
       {/* Lista kategorii z odpowiedziami */}
