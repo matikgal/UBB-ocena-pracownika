@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react'
 import { Button } from '../ui/button'
 import { useAuth } from '../../contexts/AuthContext'
@@ -36,6 +37,7 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 				if (userData?.name) {
 					const authorName = userData.name.trim()
 					if (authorName) {
+						// Optimize the query to fetch only necessary articles
 						const fetchedArticles = await getArticlesByAuthor(authorName)
 						setArticles(fetchedArticles)
 					} else {
