@@ -6,7 +6,8 @@ import { Separator } from '../ui/separator'
 import { User, Mail, Award, BookOpen } from 'lucide-react'
 import { UserResponse } from '../../types'
 import { Button } from '../ui/button'
-import { ArticlesCarousel } from './ArticlesCarousel'
+
+
 
 interface ProfileComponentProps {
 	userEmail?: string
@@ -190,10 +191,7 @@ export function ProfileComponent({ userEmail, onClose }: ProfileComponentProps) 
 				</div>
 			</div>
 
-			{/* ArticlesCarousel component placed here, before the "Punkty według kategorii" section */}
-			{responses.length > 0 && (
-				<ArticlesCarousel userName={profileData?.name || userData?.name || ''} responses={responses} />
-			)}
+			
 
 			{/* Sekcja kategorii */}
 			<h3 className="text-lg font-semibold text-gray-900 mb-4">Punkty według kategorii</h3>

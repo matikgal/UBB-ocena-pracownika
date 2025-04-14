@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '../ui/button'
 import { useAuth } from '../../contexts/AuthContext'
-import { X, ExternalLink, Plus, Check } from 'lucide-react'
+import { X, ExternalLink, Plus, Check, Trash2 } from 'lucide-react'
 import { usePagination } from '../../hooks/usePagination'
 import { Article } from '../../types/index'
 import { getArticlesByAuthor } from '../../services/firebase/articlesService'
@@ -21,9 +21,10 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 	const [addingArticle, setAddingArticle] = useState<Record<string, boolean>>({})
+	const [deletingArticle, setDeletingArticle] = useState<Record<string, boolean>>({})
 
 	const { userData } = useAuth()
-	const { loadResponses, saveResponse } = useUserResponses()
+	const { loadResponses, saveResponse, deleteResponse } = useUserResponses()
 
 	// Pobierz artykuły autora po załadowaniu komponentu
 	useEffect(() => {
@@ -205,6 +206,33 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 		}
 	}
 
+	// Add a new function to handle article deletion
+	const handleDeleteArticle = async (responseId: string) => {
+		if (!userData?.email) {
+			toast.error('Musisz być zalogowany, aby usunąć artykuł')
+			return
+		}
+
+		try {
+			setDeletingArticle(prev => ({ ...prev, [responseId]: true }))
+
+			const success = await deleteResponse(responseId)
+			
+			if (success) {
+				// Update local state to reflect the deletion
+				setUserResponses(prev => prev.filter(response => response.id !== responseId))
+				toast.success('Artykuł został usunięty z Twoich publikacji')
+			} else {
+				toast.error('Nie udało się usunąć artykułu')
+			}
+		} catch (err) {
+			console.error('Error deleting article:', err)
+			toast.error('Nie udało się usunąć artykułu')
+		} finally {
+			setDeletingArticle(prev => ({ ...prev, [responseId]: false }))
+		}
+	}
+
 	// Renderowanie komponentu
 	return (
 		<div className="h-full p-6 pb-1 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col">
@@ -250,11 +278,11 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 						<>
 							{/* Lista artykułów */}
 							<div className="flex-1 overflow-y-auto pr-2 mb-4">
-								<div className="grid grid-cols-1 gap-4">
+								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 									{currentItems.map((article, index) => (
 										<Card
 											key={article.id || index}
-											className={`shadow-sm hover:shadow transition-all ${getCardStyle(article)}`}>
+											className={`shadow-sm hover:shadow transition-all h-full flex flex-col ${getCardStyle(article)}`}>
 											<CardHeader className="pb-2">
 												<div className="flex justify-between items-start">
 													<CardTitle className="text-lg font-medium">{article.title}</CardTitle>
@@ -342,77 +370,103 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 													)}
 												</div>
 											</CardContent>
-											<CardFooter className="pt-2 border-t">
-												<Button
-													variant="outline"
-													size="sm"
-													className="w-full text-green-700 border-green-200 hover:bg-green-50"
-													onClick={() => handleAddArticleToResponse(article)}
-													disabled={addingArticle[article.id || article.title] || !!getArticleResponseStatus(article)}>
-													{addingArticle[article.id || article.title] ? (
-														<>
-															<Check className="h-4 w-4 mr-2" />
-															Dodawanie...
-														</>
-													) : getArticleResponseStatus(article) ? (
-														<>
-															<Check className="h-4 w-4 mr-2" />
-															{getArticleResponseStatus(article).status === 'approved'
-																? 'Zatwierdzona'
-																: getArticleResponseStatus(article).status === 'rejected'
-																? 'Odrzucona'
-																: 'Oczekująca'}
-														</>
-													) : (
-														<>
-															<Plus className="h-4 w-4 mr-2" />
-															Dodaj do moich publikacji
-														</>
+											<CardFooter className="pt-2 border-t mt-auto">
+												<div className="flex w-full gap-2">
+													<Button
+														variant="outline"
+														size="sm"
+														className="flex-1 text-green-700 border-green-200 hover:bg-green-50"
+														onClick={() => handleAddArticleToResponse(article)}
+														disabled={addingArticle[article.id || article.title] || !!getArticleResponseStatus(article)}>
+														{addingArticle[article.id || article.title] ? (
+															<>
+																<Check className="h-4 w-4 mr-2" />
+																Dodawanie...
+															</>
+														) : getArticleResponseStatus(article) ? (
+															<>
+																<Check className="h-4 w-4 mr-2" />
+																{getArticleResponseStatus(article).status === 'approved'
+																	? 'Zatwierdzona'
+																	: getArticleResponseStatus(article).status === 'rejected'
+																	? 'Odrzucona'
+																	: 'Oczekująca'}
+															</>
+														) : (
+															<>
+																<Plus className="h-4 w-4 mr-2" />
+																Dodaj do moich publikacji
+															</>
+														)}
+													</Button>
+												
+													{/* New delete button - only show for pending or rejected articles */}
+													{getArticleResponseStatus(article) && 
+													(getArticleResponseStatus(article).status === 'pending' || 
+													getArticleResponseStatus(article).status === 'rejected') && (
+														<Button
+															variant="outline"
+															size="sm"
+															className="text-red-700 border-red-200 hover:bg-red-50"
+															onClick={() => handleDeleteArticle(getArticleResponseStatus(article).id)}
+															disabled={deletingArticle[getArticleResponseStatus(article).id]}>
+															{deletingArticle[getArticleResponseStatus(article).id] ? (
+																<>
+																	<span className="animate-spin h-4 w-4 mr-2 border-b-2 border-red-700 rounded-full"></span>
+																	Usuwanie...
+																</>
+															) : (
+																<>
+																	<Trash2 className="h-4 w-4 mr-2" />
+																	Usuń
+																</>
+															)}
+														</Button>
 													)}
-												</Button>
+												</div>
 											</CardFooter>
 										</Card>
-									))}
+										
+								))}
+							</div>
+						</div>
+
+						{/* Paginacja */}
+						{totalPages > 1 && (
+							<div className="flex justify-center mt-4 border-t border-gray-100 pt-4">
+								<div className="flex space-x-2">
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+										disabled={currentPage === 1}>
+										Poprzednia
+									</Button>
+									<div className="flex items-center space-x-1">
+										{Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+											<Button
+												key={page}
+												variant={currentPage === page ? 'default' : 'outline'}
+												size="sm"
+												className="w-8 h-8 p-0"
+												onClick={() => setCurrentPage(page)}>
+												{page}
+											</Button>
+										))}
+									</div>
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+										disabled={currentPage === totalPages}>
+										Następna
+									</Button>
 								</div>
 							</div>
-
-							{/* Paginacja */}
-							{totalPages > 1 && (
-								<div className="flex justify-center mt-4 border-t border-gray-100 pt-4">
-									<div className="flex space-x-2">
-										<Button
-											variant="outline"
-											size="sm"
-											onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-											disabled={currentPage === 1}>
-											Poprzednia
-										</Button>
-										<div className="flex items-center space-x-1">
-											{Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-												<Button
-													key={page}
-													variant={currentPage === page ? 'default' : 'outline'}
-													size="sm"
-													className="w-8 h-8 p-0"
-													onClick={() => setCurrentPage(page)}>
-													{page}
-												</Button>
-											))}
-										</div>
-										<Button
-											variant="outline"
-											size="sm"
-											onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-											disabled={currentPage === totalPages}>
-											Następna
-										</Button>
-									</div>
-								</div>
-							)}
-						</>
-					)}
-				</>
-			)}
-		</div>
-	)
-}
+						)}
+					</>
+				)}
+			</>
+		)}
+	</div>
+)}
