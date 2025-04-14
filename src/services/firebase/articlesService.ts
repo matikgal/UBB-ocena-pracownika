@@ -8,37 +8,21 @@ export async function getArticlesByAuthor(authorName: string): Promise<Article[]
 			return []
 		}
 
-		// Create search terms for the author (full name and individual parts)
-		const authorNameLower = authorName.toLowerCase().trim()
-		const nameParts = authorNameLower.split(' ').filter(part => part.length > 1)
+		const nameParts = authorName.trim().split(' ')
 
-		// Try exact match first using the authors array
+	
+		if (nameParts.length < 2) {
+			return []
+		}
+		
+		const reorderedName = `${nameParts.slice(-1)[0]} ${nameParts.slice(0, -1).join(' ')}`
+
+	
 		const articlesRef = collection(db, 'Articles')
-		const exactMatchQuery = query(articlesRef, where('authors', 'array-contains', authorName))
+		const exactMatchQuery = query(articlesRef, where('authors', 'array-contains', reorderedName))
 
 		const articlesSnapshot = await getDocs(exactMatchQuery)
-		let articles = articlesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Article))
-
-	
-		if (articles.length === 0) {
-			
-			const allArticlesSnapshot = await getDocs(articlesRef)
-
-			articles = allArticlesSnapshot.docs
-				.map(doc => ({ id: doc.id, ...doc.data() } as Article))
-				.filter(article => {
-					if (!article.authors || !Array.isArray(article.authors)) {
-						return false
-					}
-
-					return article.authors.some(author => {
-						const authorLower = author.toLowerCase()
-						return nameParts.every(part => authorLower.includes(part))
-					})
-				})
-		}
-
-	
+		const articles = articlesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Article))
 
 		return articles
 	} catch (error) {
@@ -47,18 +31,17 @@ export async function getArticlesByAuthor(authorName: string): Promise<Article[]
 	}
 }
 
-// Add a function to add articles with proper indexing
 export async function addArticleWithIndexing(article: Article): Promise<string> {
 	try {
-		// Create searchable terms from authors
+
 		const authorSearchTerms: string[] = []
 
 		if (article.authors && Array.isArray(article.authors)) {
-			// Add full author names in lowercase
+		
 			article.authors.forEach(author => {
 				authorSearchTerms.push(author.toLowerCase())
 
-				// Add individual name parts for partial matching
+			
 				const parts = author
 					.toLowerCase()
 					.split(' ')
@@ -67,11 +50,11 @@ export async function addArticleWithIndexing(article: Article): Promise<string> 
 			})
 		}
 
-		// Add the article with search terms
+	
 		const articlesRef = collection(db, 'Articles')
 		const articleWithSearchTerms = {
 			...article,
-			authorSearchTerms: [...new Set(authorSearchTerms)], // Remove duplicates
+			authorSearchTerms: [...new Set(authorSearchTerms)], 
 			createdAt: new Date(),
 		}
 
