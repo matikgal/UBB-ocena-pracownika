@@ -117,10 +117,8 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 		}
 
 		try {
-			// Sprawdź czy artykuł już istnieje w odpowiedziach użytkownika - bardziej rygorystyczne sprawdzenie
+			// Sprawdź czy artykuł już istnieje w odpowiedziach użytkownika
 			const normalizedTitle = article.title.toLowerCase().trim()
-
-			// Sprawdź dokładniej, czy artykuł już istnieje
 			const existingResponse = userResponses.some(
 				response => response.questionTitle && response.questionTitle.toLowerCase().trim() === normalizedTitle
 			)
@@ -129,8 +127,6 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 				toast.info('Ten artykuł jest już dodany do Twoich publikacji')
 				return
 			}
-
-			// Dodatkowe sprawdzenie przed zapisem
 			const allResponses = await loadResponses('Artykuły naukowe')
 			const alreadyExists = allResponses.some(
 				response => response.questionTitle && response.questionTitle.toLowerCase().trim() === normalizedTitle
@@ -147,32 +143,34 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 			// Generuj unikalne ID dla nowej odpowiedzi
 			const questionId = `article_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
-			// Określ punkty na podstawie dostępnych danych
-			let points = 0 // Domyślna wartość
+			// --- Uproszczona logika określania punktów ---
+			let points = 0;
+			const parseValue = (value: any): number => {
+				if (value === null || value === undefined) return 0;
+				if (typeof value === 'number') return isNaN(value) ? 0 : value;
+				const numericString = String(value).replace(/[^\d.]/g, '');
+				const parsed = parseFloat(numericString);
+				return isNaN(parsed) ? 0 : parsed;
+			};
 
+		
 			if (article.pk) {
-				// Jeśli mamy pk, użyj go (usuń nienumaryczne znaki i skonwertuj na liczbę)
-				const numericValue = article.pk.replace(/[^\d.]/g, '')
-				points = parseFloat(numericValue) || 0
-			} else if (article.points !== undefined && article.points !== null) {
-				// W przeciwnym razie użyj points, jeśli istnieje
-				if (typeof article.points === 'string') {
-					// Użyj type assertion, aby poinformować TypeScript, że to string
-					points = parseFloat((article.points as string).replace(/[^\d.]/g, '')) || 0
-				} else if (typeof article.points === 'number') {
-					points = article.points
-				} else {
-					// Dla innych typów, konwertuj na string i potem na liczbę
-					points = parseFloat(String(article.points)) || 0
-				}
+				points = parseValue(article.pk);
 			}
+			// Jeśli pk nie dało punktów (lub nie istniało), spróbuj z points
+			if (points === 0 && article.points !== undefined && article.points !== null) {
+				points = parseValue(article.points);
+			}	
+			const POINT_THRESHOLD = 110; 
+			const numberOfAuthors = article.authors?.length || 0;
 
-			// Upewnij się, że points jest liczbą
-			if (isNaN(points) || points === undefined || points === null) {
-				points = 0
+			if (points < POINT_THRESHOLD && numberOfAuthors > 0) {
+				points = Math.ceil(points / numberOfAuthors); 
+				
 			}
+			
 
-			// Najpierw aktualizuj lokalny stan przed zapisem do bazy danych
+
 			const newResponse = {
 				id: questionId,
 				questionTitle: article.title,
@@ -189,7 +187,7 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 			await saveResponse(
 				questionId,
 				article.title, // Używamy tytułu artykułu jako tytułu pytania
-				points, // Poprawnie skonwertowane punkty
+				points, // Poprawnie skonwertowane i ewentualnie podzielone punkty
 				'Artykuły naukowe',
 				'pending'
 			)

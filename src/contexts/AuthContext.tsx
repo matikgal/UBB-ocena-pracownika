@@ -1,38 +1,43 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import keycloak from '../lib/keycloak';
 import initKeycloak from '../lib/keycloak';
 import { db } from '../../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
-// Definicja typów dla kontekstu uwierzytelniania
+interface UserData { // Define a more specific type for userData
+  name: string;
+  lastName: string;
+  email: string;
+  username: string;
+  roles: string[]; // Add roles array
+  avatar?: string; // Keep avatar optional
+}
+
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   token: string | undefined;
   login: () => void;
   logout: () => void;
-  userData: any;
+  userData: UserData | null; // Use the UserData type
   error: string | null;
-  hasRole: (role: string) => boolean;
+  hasRole: (role: string) => boolean; // Add hasRole function signature
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  // Inicjalizacja stanów kontekstu
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [token, setToken] = useState<string | undefined>(undefined);
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<UserData | null>(null); // Use UserData type
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Funkcja inicjalizująca Keycloak
     const setupKeycloak = async () => {
       try {
         setError(null);
         
-        // Inicjalizacja klienta Keycloak
         await initKeycloak.init({
           onLoad: 'check-sso',
           silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
@@ -44,24 +49,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         if (keycloak.authenticated) {
           setToken(keycloak.token);
-          
-          // Wyodrębnienie danych użytkownika z tokenu Keycloak
-          const userData = {
+
+          // Extract user data including roles
+          const keycloakRoles = keycloak.tokenParsed?.realm_access?.roles || [];
+          const profileData: UserData = { // Use UserData type
             name: keycloak.tokenParsed?.name || keycloak.tokenParsed?.given_name || '',
             lastName: keycloak.tokenParsed?.family_name || '',
             email: keycloak.tokenParsed?.email || '',
             username: keycloak.tokenParsed?.preferred_username || '',
-            roles: keycloak.tokenParsed?.realm_access?.roles || [],
+            roles: keycloakRoles, // Store roles
+            // avatar: keycloak.tokenParsed?.picture // If you have avatar in token
           };
-          
-          console.log('Extracted user data:', userData);
-          
-          setUserData(userData);
-          
-          // Zapisanie danych użytkownika w Firestore
-          await saveUserToFirestore(userData);
-          
-          // Konfiguracja odświeżania tokenu
+
+          setUserData(profileData); // Set the full user data with roles
+
+          // Save user data to Firestore if they don't exist yet
+          await saveUserToFirestore(profileData); // Pass the full profileData
+
+          // Set up token refresh
           keycloak.onTokenExpired = () => {
             keycloak.updateToken(30).catch(() => {
               setIsAuthenticated(false);
@@ -74,51 +79,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
       }
     };
-    
-    // Funkcja zapisująca dane użytkownika do Firestore
-    const saveUserToFirestore = async (userData: any) => {
+
+    // Add this new function to save user data to Firestore
+    const saveUserToFirestore = async (profileData: UserData) => { // Use UserData type
       try {
-        const userEmail = userData.email;
+        // Use email as document ID since it's unique for each user
+        const userEmail = profileData.email;
         if (!userEmail) {
           console.error('No email found in user data');
           return;
         }
         
-        // Sprawdzenie czy użytkownik już istnieje w bazie
+        // Check if user already exists in Firestore
         const userDocRef = doc(db, 'Users', userEmail);
         const userDoc = await getDoc(userDocRef);
         
+        // Only create/update if user doesn't exist
         if (!userDoc.exists()) {
-          // Tworzenie nowego dokumentu użytkownika
           await setDoc(userDocRef, {
-            ...userData,
+            ...profileData, // Save all profile data including roles
             createdAt: new Date(),
             lastLogin: new Date()
           });
           console.log('User added to Firestore');
         } else {
-          // Aktualizacja istniejącego dokumentu
+          // Optionally update lastLogin time and roles
           await setDoc(userDocRef, {
-            lastLogin: new Date()
+            lastLogin: new Date(),
+            roles: profileData.roles // Ensure roles are updated on login
           }, { merge: true });
-          console.log('User already exists, updated lastLogin');
+          console.log('User already exists, updated lastLogin and roles');
         }
       } catch (error) {
         console.error('Error saving user to Firestore:', error);
       }
     };
-    
+
     setupKeycloak();
   }, []);
 
-  // Funkcja logowania użytkownika
   const login = () => {
     keycloak.login({
       redirectUri: window.location.origin
     });
   };
 
-  // Funkcja wylogowania użytkownika
   const logout = () => {
     setIsAuthenticated(false);
     setToken(undefined);
@@ -126,32 +131,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     keycloak.logout({ redirectUri: window.location.origin });
   };
 
-  // Funkcja sprawdzająca czy użytkownik ma określoną rolę
-  const hasRole = (role: string): boolean => {
-    if (!userData || !userData.roles) {
-      return false;
-    }
-    return userData.roles.includes(role);
-  };
+  // Implement the hasRole function
+  const hasRole = useCallback((role: string): boolean => {
+    return !!userData?.roles?.includes(role);
+  }, [userData]); // Depend on userData
 
-  // Dostarczenie kontekstu uwierzytelniania do komponentów potomnych
   return (
-    <AuthContext.Provider value={{ 
-      isAuthenticated, 
-      isLoading, 
-      token, 
-      login, 
-      logout, 
-      userData, 
-      error,
-      hasRole
-    }}>
+    // Add hasRole to the provider value
+    <AuthContext.Provider value={{ isAuthenticated, isLoading, token, login, logout, userData, error, hasRole }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook umożliwiający korzystanie z kontekstu uwierzytelniania
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
