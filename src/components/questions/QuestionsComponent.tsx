@@ -1,4 +1,4 @@
-import { useQuestions } from '../../services/firebase/useQuestions'
+import { useQuestions } from '../../services/firebase/responses/useQuestions'
 import { Button } from '../ui/button'
 import { QuestionItem } from './QuestionItem'
 import { LoadingState } from '../common/LoadingState'
@@ -33,21 +33,21 @@ export default function QuestionsComponent({
 		handleDeleteResponse 
 	} = useQuestions(selectedCategory)
 
-	// Show toast when success message changes
+	
 	useEffect(() => {
 		if (successMessage) {
 			toast.success(successMessage);
 		}
 	}, [successMessage]);
 
-	// Show toast when error changes
+	
 	useEffect(() => {
 		if (error) {
 			toast.error(error);
 		}
 	}, [error]);
 
-	// Determine if this is the first or last category
+
 	const currentIndex = categories.indexOf(selectedCategory)
 	const isFirstCategory = currentIndex === 0
 	const isLastCategory = currentIndex === categories.length - 1
@@ -60,7 +60,7 @@ export default function QuestionsComponent({
 	}
 
 	if (questions.length === 0) {
-		// Show toast for empty state and still render the EmptyState component
+	
 		toast.info(`Brak pytań w kategorii: ${selectedCategory}`);
 		return (
 			<EmptyState 

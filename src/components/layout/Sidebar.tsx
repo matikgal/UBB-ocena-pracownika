@@ -10,7 +10,7 @@ import {
 	publikacjeDydaktyczne,
 	zajeciaJezykObcy,
 } from '../../lib/questions'
-import { useUserResponses } from '../../services/firebase/useUserResponses'
+import { useResponses } from '../../services/firebase/responses/useResponses'
 import { useRecordsImport } from '../../services/firebase/useRecordsImport'
 
 interface MenuItem {
@@ -20,7 +20,6 @@ interface MenuItem {
 	subcategories: Array<{ id: string; title: string; points: number | string; tooltip: string[] }>
 }
 
-// Definicja dostępnych kategorii pytań
 const categories: MenuItem[] = [
 	{ title: 'Publikacje dydaktyczne', url: '#', icon: BookOpen, subcategories: publikacjeDydaktyczne },
 	{ title: 'Podniesienie jakości nauczania', url: '#', icon: BookOpen, subcategories: podniesienieJakosciNauczania },
@@ -71,34 +70,27 @@ export function AppSidebar({
 	onCloseOtherComponents = () => {},
 }: AppSidebarProps) {
 	const { hasRole } = useAuth()
-	const { loadResponses } = useUserResponses()
+	const { loadResponses } = useResponses()
 	const { importRecords, loading: importLoading } = useRecordsImport()
 
-	// Sprawdzenie uprawnień użytkownika
+	
 	const canEditQuestions = hasRole('admin') || hasRole('dziekan')
 
 	const canManageLibrary = true
 	const isAdmin = hasRole('admin')
 
-	// Funkcja obsługująca wybór kategorii z odświeżeniem odpowiedzi
 	const handleCategorySelect = (category: string) => {
-		// Najpierw zamknij wszystkie otwarte komponenty
 		onCloseOtherComponents()
-
-		// Następnie wyślij zdarzenie zapisania odpowiedzi
 		const saveEvent = new CustomEvent('saveResponses', {
 			detail: { fromCategory: selectedCategory, toCategory: category },
 		})
 		window.dispatchEvent(saveEvent)
-
-		// Ustaw wybraną kategorię
 		setSelectedCategory(category)
 
-		// Wymuś odświeżenie odpowiedzi przy zmianie kategorii
 		loadResponses(`${category}?refresh=${new Date().getTime()}`)
 	}
 
-	// Funkcja obsługująca zarządzanie biblioteką
+
 	const handleLibraryManagement = () => {
 		if (typeof onManageLibrary === 'function') {
 			onManageLibrary()
@@ -117,12 +109,12 @@ export function AppSidebar({
 
 	return (
 		<div className="h-full w-80 bg-white border-r border-gray-200 flex flex-col">
-			{/* Logo aplikacji */}
+	
 			<div className="p-2 flex justify-center border-b border-gray-200">
 				<img src={logo} alt="UBB Logo" className="h-20" />
 			</div>
 
-			{/* Lista kategorii */}
+		
 			<div className="flex-1 overflow-auto px-4 py-5">
 				<div className="mb-3">
 					<h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider ml-2">Kategorie</h2>
@@ -151,9 +143,9 @@ export function AppSidebar({
 				</nav>
 			</div>
 
-			{/* Sekcja dolna z przyciskami akcji i profilem użytkownika */}
+		
 			<div className="p-4 space-y-3 border-t border-gray-200 bg-gray-100">
-				{/* Przyciski administracyjne */}
+			
 				{canEditQuestions && (
 					<div className="space-y-2">
 						<Button
@@ -185,7 +177,7 @@ export function AppSidebar({
 					</div>
 				)}
 
-				{/* Przycisk zarządzania biblioteką */}
+		
 				{canManageLibrary && (
 					<Button
 						variant="outline"
@@ -196,7 +188,7 @@ export function AppSidebar({
 					</Button>
 				)}
 
-				{/* Profil użytkownika z możliwością kliknięcia */}
+		
 				<div
 					className="mt-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm cursor-pointer hover:bg-blue-50 transition-colors"
 					onClick={onViewProfile}>
@@ -214,7 +206,6 @@ export function AppSidebar({
 							<p className="text-sm font-medium text-gray-900 truncate">{userData.name}</p>
 							<p className="text-xs text-gray-500 truncate">{userData.email}</p>
 						</div>
-						{/* Przycisk wylogowania z zatrzymaniem propagacji kliknięcia */}
 						<Button
 							variant="ghost"
 							size="icon"

@@ -10,7 +10,7 @@ import { LoadingState } from "../common/LoadingState"
 import { QuestionForm } from "./components/QuestionForm"
 import { QuestionDisplay } from "./components/QuestionDisplay"
 import { Question } from "../../types"
-import { useQuestionsManager } from "../../services/firebase/useQuestionsManager"
+import { useQuestionsManager } from "../../services/firebase/question/useQuestionsManager"
 
 
 interface EditQuestionsComponentProps {
@@ -18,7 +18,7 @@ interface EditQuestionsComponentProps {
   onSave: (updatedQuestions: Question[]) => void
 }
 
-// Lista dostępnych kategorii pytań
+
 const CATEGORIES = [
   'Publikacje dydaktyczne',
   'Podniesienie jakości nauczania',
@@ -28,11 +28,11 @@ const CATEGORIES = [
 ]
 
 export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsComponentProps) {
-  // Sprawdzenie uprawnień użytkownika
+ 
   const { hasRole } = useAuth()
   const hasAccess = hasRole('admin') || hasRole('dziekan')
 
-  // Inicjalizacja stanów komponentu
+
   const [selectedCategory, setSelectedCategory] = useState<string>(CATEGORIES[0])
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
   const [newQuestion, setNewQuestion] = useState<Question>({
@@ -42,7 +42,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
     tooltip: [''],
   })
 
-  // Pobranie funkcji do zarządzania pytaniami z hooka
+ 
   const {
     questions,
     loading,
@@ -54,7 +54,7 @@ export function EditQuestionsComponent({ onClose, onSave }: EditQuestionsCompone
     addAllQuestionsFromFile,
   } = useQuestionsManager(selectedCategory)
 
-  // Obsługa błędów
+ 
   useEffect(() => {
     if (error) {
       toast.error(error)

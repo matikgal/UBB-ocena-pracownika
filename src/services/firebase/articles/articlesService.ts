@@ -1,6 +1,10 @@
+/**
+ * Serwis do zarządzania artykułami naukowymi w bazie Firestore.
+ * Umożliwia dodawanie i wyszukiwanie artykułów z indeksowaniem autorów.
+ */
 import { addDoc, collection, getDocs, query, where } from 'firebase/firestore'
-import { db } from '../../../firebase'
-import { Article } from '../../types'
+import { db } from '../../../../firebase'
+import { Article } from '../../../types'
 
 export async function getArticlesByAuthor(authorName: string): Promise<Article[]> {
 	try {

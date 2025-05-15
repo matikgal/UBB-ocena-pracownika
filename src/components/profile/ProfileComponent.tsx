@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import { useUserResponses } from '../../services/firebase/useUserResponses'
+import { useResponses } from '../../services/firebase/responses/useResponses'
 import { PageHeader } from '../common/PageHeader'
 import { Separator } from '../ui/separator'
 import { User, Mail, Award, BookOpen } from 'lucide-react'
@@ -15,9 +15,9 @@ interface ProfileComponentProps {
 }
 
 export function ProfileComponent({ userEmail, onClose }: ProfileComponentProps) {
-	// Inicjalizacja stanów i pobieranie danych
+	
 	const { userData } = useAuth()
-	const { loadResponses } = useUserResponses()
+	const { loadResponses } = useResponses()
 	const [responses, setResponses] = useState<UserResponse[]>([])
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
@@ -27,14 +27,14 @@ export function ProfileComponent({ userEmail, onClose }: ProfileComponentProps) 
 
 	const targetEmail = userEmail || userData?.email
 
-	// Obliczanie statystyk odpowiedzi
+
 	const totalPoints = responses.reduce((sum, response) => sum + response.points, 0)
 	const approvedResponses = responses.filter(r => r.status === 'approved')
 	const approvedPoints = approvedResponses.reduce((sum, response) => sum + response.points, 0)
 	const pendingResponses = responses.filter(r => r.status === 'pending')
 	const rejectedResponses = responses.filter(r => r.status === 'rejected')
 
-	// Podsumowanie kategorii
+
 	const categorySummary = responses.reduce((acc, response) => {
 		if (!acc[response.category]) {
 			acc[response.category] = {
@@ -51,7 +51,7 @@ export function ProfileComponent({ userEmail, onClose }: ProfileComponentProps) 
 		return acc
 	}, {} as Record<string, { total: number; approved: number; count: number }>)
 
-	// Pobieranie danych użytkownika i odpowiedzi
+
 	useEffect(() => {
 		if (dataFetchedRef.current) return
 
@@ -62,15 +62,15 @@ export function ProfileComponent({ userEmail, onClose }: ProfileComponentProps) 
 				setLoading(true)
 				setError(null)
 
-				// Ładowanie wszystkich odpowiedzi użytkownika
+			
 				const allResponses = await loadResponses()
 
 				dataFetchedRef.current = true
 
-				// Filtrowanie odpowiedzi z niezdefiniowanymi ID
+			
 				setResponses(allResponses.filter(response => response.id !== undefined) as UserResponse[])
 
-				// Ustawienie danych profilu
+		
 				setProfileData({
 					email: targetEmail,
 					name: userData?.name || 'Użytkownik',
@@ -93,7 +93,7 @@ export function ProfileComponent({ userEmail, onClose }: ProfileComponentProps) 
 		}
 	}, [targetEmail, userData])
 
-	// Wyświetlanie stanu ładowania
+	
 	if (loading) {
 		return (
 			<div className="h-full p-6 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col mx-2 my-2 overflow-auto">
@@ -108,7 +108,7 @@ export function ProfileComponent({ userEmail, onClose }: ProfileComponentProps) 
 		)
 	}
 
-	// Wyświetlanie błędu
+
 	if (error) {
 		return (
 			<div className="h-full p-6 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col  overflow-auto">
@@ -118,7 +118,7 @@ export function ProfileComponent({ userEmail, onClose }: ProfileComponentProps) 
 		)
 	}
 
-	// Funkcja pokazująca wszystkie odpowiedzi
+
 	const handleShowAllResponses = () => {
 		setVisibleResponses(responses.length)
 	}
@@ -127,7 +127,7 @@ export function ProfileComponent({ userEmail, onClose }: ProfileComponentProps) 
 		<div className="h-full p-6 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col  overflow-y-auto">
 			<PageHeader title="Profil użytkownika" onClose={onClose} />
 
-			{/* Sekcja informacji o użytkowniku */}
+			
 			<div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-8">
 				<div className="w-24 h-24 rounded-full bg-ubbprimary text-white flex items-center justify-center text-3xl font-semibold">
 					{profileData?.avatar ? (
@@ -149,7 +149,7 @@ export function ProfileComponent({ userEmail, onClose }: ProfileComponentProps) 
 
 			<Separator className="mb-6" />
 
-			{/* Sekcja statystyk */}
+			
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
 				<div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
 					<div className="flex items-center text-blue-900 mb-2">
@@ -193,7 +193,7 @@ export function ProfileComponent({ userEmail, onClose }: ProfileComponentProps) 
 
 			
 
-			{/* Sekcja kategorii */}
+		
 			<h3 className="text-lg font-semibold text-gray-900 mb-4">Punkty według kategorii</h3>
 
 			{Object.keys(categorySummary).length === 0 ? (
@@ -222,7 +222,7 @@ export function ProfileComponent({ userEmail, onClose }: ProfileComponentProps) 
 				</div>
 			)}
 
-			{/* Sekcja ostatnich odpowiedzi */}
+		
 			<h3 className="text-lg font-semibold text-gray-800 mt-8 mb-4">Ostatnie odpowiedzi</h3>
 
 			{responses.length === 0 ? (
@@ -268,7 +268,7 @@ export function ProfileComponent({ userEmail, onClose }: ProfileComponentProps) 
 						</div>
 					))}
 
-					{/* Przycisk do wyświetlenia wszystkich odpowiedzi */}
+			
 					{responses.length > visibleResponses && (
 						<div className="text-center mt-2">
 							<Button variant="ghost" className="text-blue-600" onClick={handleShowAllResponses}>

@@ -7,7 +7,7 @@ import { CheckCircle, XCircle, HelpCircle } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '../ui/dialog'
 import { Textarea } from '../ui/textarea'
 import { useAuth } from '../../contexts/AuthContext'
-import { useUserResponses } from '../../services/firebase/useUserResponses'
+import { useResponses } from '../../services/firebase/responses/useResponses'
 
 
 interface UserResponse {
@@ -31,7 +31,7 @@ interface CategorySummary {
 }
 
 export default function UserResponsesList({ userEmail }: { userEmail: string }) {
-  // Inicjalizacja stanów komponentu
+
   const [responses, setResponses] = useState<UserResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -40,12 +40,12 @@ export default function UserResponsesList({ userEmail }: { userEmail: string }) 
   const [rejectionReason, setRejectionReason] = useState('')
   const [selectedResponseId, setSelectedResponseId] = useState<string | null>(null)
   
-  // Sprawdzenie uprawnień użytkownika
+
   const { hasRole } = useAuth()
-  const { verifyResponse } = useUserResponses()
+  const { verifyResponse } = useResponses()
   const canVerify = hasRole('admin') || hasRole('dziekan')
 
-  // Pobieranie odpowiedzi użytkownika przy montowaniu komponentu
+
   useEffect(() => {
     fetchUserResponses()
   }, [userEmail])
@@ -78,7 +78,7 @@ export default function UserResponsesList({ userEmail }: { userEmail: string }) 
       
       setResponses(fetchedResponses)
       
-      // Grupowanie odpowiedzi według kategorii i obliczanie sum
+    
       const categories: Record<string, UserResponse[]> = {}
       let total = 0
       
@@ -87,7 +87,7 @@ export default function UserResponsesList({ userEmail }: { userEmail: string }) 
           categories[response.category] = []
         }
         categories[response.category].push(response)
-        // Zliczanie tylko zatwierdzonych odpowiedzi lub oczekujących jeśli nie weryfikujemy
+     
         if (response.status === 'approved' || (response.status === 'pending' && !canVerify)) {
           total += response.points
         }
@@ -95,7 +95,7 @@ export default function UserResponsesList({ userEmail }: { userEmail: string }) 
       
       const summaries: CategorySummary[] = Object.keys(categories).map(category => {
         const categoryResponses = categories[category]
-        // Zliczanie tylko zatwierdzonych odpowiedzi lub oczekujących jeśli nie weryfikujemy
+  
         const categoryTotal = categoryResponses.reduce((sum, r) => {
           if (r.status === 'approved' || (r.status === 'pending' && !canVerify)) {
             return sum + r.points
@@ -120,11 +120,11 @@ export default function UserResponsesList({ userEmail }: { userEmail: string }) 
     }
   }
 
-  // Obsługa zatwierdzania odpowiedzi
+
   const handleApproveResponse = async (responseId: string) => {
     try {
       if (await verifyResponse(userEmail, responseId, 'approved')) {
-        // Aktualizacja stanu lokalnego
+  
         const updatedResponses = responses.map(response => {
           if (response.id === responseId) {
             return { 
@@ -136,7 +136,7 @@ export default function UserResponsesList({ userEmail }: { userEmail: string }) 
         })
         setResponses(updatedResponses)
         
-        // Przeliczenie sum
+     
         fetchUserResponses()
       }
     } catch (err) {
@@ -145,13 +145,13 @@ export default function UserResponsesList({ userEmail }: { userEmail: string }) 
     }
   }
 
-  // Obsługa odrzucania odpowiedzi
+
   const handleRejectResponse = async () => {
     if (!selectedResponseId) return
     
     try {
       if (await verifyResponse(userEmail, selectedResponseId, 'rejected', rejectionReason)) {
-        // Aktualizacja stanu lokalnego
+ 
         const updatedResponses = responses.map(response => {
           if (response.id === selectedResponseId) {
             return { 
@@ -164,11 +164,11 @@ export default function UserResponsesList({ userEmail }: { userEmail: string }) 
         })
         setResponses(updatedResponses)
         
-        // Reset stanu dialogu
+
         setSelectedResponseId(null)
         setRejectionReason('')
         
-        // Przeliczenie sum
+
         fetchUserResponses()
       }
     } catch (err) {
@@ -177,7 +177,7 @@ export default function UserResponsesList({ userEmail }: { userEmail: string }) 
     }
   }
 
-  // Funkcje pomocnicze do wyświetlania statusu
+
   const getStatusIcon = (status?: string) => {
     switch (status) {
       case 'approved':
@@ -202,7 +202,7 @@ export default function UserResponsesList({ userEmail }: { userEmail: string }) 
     }
   }
 
-  // Wyświetlanie stanu ładowania
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -214,7 +214,6 @@ export default function UserResponsesList({ userEmail }: { userEmail: string }) 
     )
   }
 
-  // Wyświetlanie błędu
   if (error) {
     return (
       <div className="p-4 bg-red-50 text-red-600 border border-red-100 rounded-md">
@@ -223,7 +222,7 @@ export default function UserResponsesList({ userEmail }: { userEmail: string }) 
     )
   }
 
-  // Informacja o braku odpowiedzi
+
   if (responses.length === 0) {
     return (
       <div className="text-center py-10 text-gray-500">
@@ -234,7 +233,7 @@ export default function UserResponsesList({ userEmail }: { userEmail: string }) 
 
   return (
     <div className="flex flex-col h-full overflow-y-auto">
-      {/* Podsumowanie punktów */}
+    
       <div className="mb-4 p-4 bg-blue-50 border border-blue-100 rounded-md">
         <div className="flex justify-between items-center">
           <h3 className="font-medium text-blue-800">Podsumowanie punktów</h3>
@@ -247,7 +246,7 @@ export default function UserResponsesList({ userEmail }: { userEmail: string }) 
         )}
       </div>
       
-      {/* Lista kategorii z odpowiedziami */}
+   
       {categorySummaries.map((summary) => (
         <div key={summary.category} className="mb-6">
           <div className="flex justify-between items-center mb-2">
@@ -270,7 +269,7 @@ export default function UserResponsesList({ userEmail }: { userEmail: string }) 
                       <p className="text-gray-800">{response.questionTitle}</p>
                     </div>
                     
-                    {/* Wyświetlanie powodu odrzucenia */}
+                
                     {response.status === 'rejected' && response.rejectionReason && (
                       <div className="mt-2 p-2 bg-red-100 text-red-800 text-sm rounded">
                         <p className="font-medium text-black">Powód odrzucenia:</p>
@@ -303,7 +302,7 @@ export default function UserResponsesList({ userEmail }: { userEmail: string }) 
                       {response.points} pkt
                     </div>
                     
-                    {/* Przyciski akcji dla weryfikacji odpowiedzi */}
+                   
                     {canVerify && response.status === 'pending' && (
                       <div className="flex gap-2 mt-2">
                         <Button 

@@ -22,7 +22,7 @@ export interface Article {
 }
 
 export interface UserResponse {
-  id: string;
+  id?: string;
   userId?: string;
   userName?: string;
   userEmail?: string;

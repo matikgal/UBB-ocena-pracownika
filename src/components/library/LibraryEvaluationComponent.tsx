@@ -1,15 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react'
 import { Button } from '../ui/button'
 import { useAuth } from '../../contexts/AuthContext'
 import { X, ExternalLink, Plus, Check, Trash2 } from 'lucide-react'
 import { usePagination } from '../../hooks/usePagination'
 import { Article } from '../../types/index'
-import { getArticlesByAuthor } from '../../services/firebase/articlesService'
+import { getArticlesByAuthor } from '../../services/firebase/articles/articlesService'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '../ui/card'
 import { Badge } from '../ui/badge'
 
-import { useUserResponses } from '../../services/firebase/useUserResponses'
+import { useResponses } from '../../services/firebase/responses/useResponses'
 import { toast } from '../common/Toast'
 
 interface LibraryEvaluationComponentProps {
@@ -17,7 +16,6 @@ interface LibraryEvaluationComponentProps {
 }
 
 export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluationComponentProps) {
-	// Stany komponentu
 	const [articles, setArticles] = useState<Article[]>([])
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
@@ -25,9 +23,9 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 	const [deletingArticle, setDeletingArticle] = useState<Record<string, boolean>>({})
 
 	const { userData } = useAuth()
-	const { loadResponses, saveResponse, deleteResponse } = useUserResponses()
+	const { loadResponses, saveResponse, deleteResponse } = useResponses()
 
-	// Pobierz artykuły autora po załadowaniu komponentu
+
 	useEffect(() => {
 		const fetchArticles = async () => {
 			try {
@@ -37,7 +35,7 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 				if (userData?.name) {
 					const authorName = userData.name.trim()
 					if (authorName) {
-						// Optimize the query to fetch only necessary articles
+					
 						const fetchedArticles = await getArticlesByAuthor(authorName)
 						setArticles(fetchedArticles)
 					} else {
@@ -57,13 +55,13 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 		fetchArticles()
 	}, [userData?.name])
 
-	// Paginacja artykułów
+	
 	const { currentPage, setCurrentPage, currentItems, totalPages } = usePagination(articles, 10)
 
-	// Stan do przechowywania odpowiedzi użytkownika
+
 	const [userResponses, setUserResponses] = useState<any[]>([])
 
-	// Pobierz odpowiedzi użytkownika po załadowaniu komponentu
+
 	useEffect(() => {
 		const fetchUserResponses = async () => {
 			if (!userData?.email) return
@@ -77,11 +75,11 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 		}
 
 		fetchUserResponses()
-	}, [userData?.email]) // Usunięto loadResponses z zależności
+	}, [userData?.email]) 
 
-	// Funkcja do określania koloru obramowania i tła na podstawie statusu odpowiedzi
+
 	const getCardStyle = (article: Article) => {
-		// Znajdź odpowiedź dla tego artykułu
+	
 		const response = userResponses.find(
 			resp => resp.questionTitle && resp.questionTitle.toLowerCase() === article.title.toLowerCase()
 		)
@@ -97,19 +95,17 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 			}
 		}
 
-		// Domyślny styl
+		
 		return 'border-gray-100'
 	}
 
-	// Funkcja sprawdzająca, czy artykuł ma już odpowiedź i jaki jest jej status
+
 	const getArticleResponseStatus = (article: Article) => {
-		// Bardziej dokładne porównanie tytułów - normalizacja tekstu
+	
 		return userResponses.find(
 			resp => resp.questionTitle && resp.questionTitle.toLowerCase().trim() === article.title.toLowerCase().trim()
 		)
 	}
-
-	// Funkcja do dodawania artykułu do odpowiedzi użytkownika
 	const handleAddArticleToResponse = async (article: Article) => {
 		if (!userData?.email) {
 			toast.error('Musisz być zalogowany, aby dodać artykuł')
@@ -117,7 +113,7 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 		}
 
 		try {
-			// Sprawdź czy artykuł już istnieje w odpowiedziach użytkownika
+			
 			const normalizedTitle = article.title.toLowerCase().trim()
 			const existingResponse = userResponses.some(
 				response => response.questionTitle && response.questionTitle.toLowerCase().trim() === normalizedTitle
@@ -134,16 +130,15 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 
 			if (alreadyExists) {
 				toast.info('Ten artykuł jest już dodany do Twoich publikacji')
-				setUserResponses(allResponses) // Aktualizuj stan, aby UI się odświeżyło
+				setUserResponses(allResponses) 
 				return
 			}
 
 			setAddingArticle(prev => ({ ...prev, [article.id || article.title]: true }))
 
-			// Generuj unikalne ID dla nowej odpowiedzi
 			const questionId = `article_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
-			// --- Uproszczona logika określania punktów ---
+		
 			let points = 0;
 			const parseValue = (value: any): number => {
 				if (value === null || value === undefined) return 0;
@@ -157,7 +152,7 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 			if (article.pk) {
 				points = parseValue(article.pk);
 			}
-			// Jeśli pk nie dało punktów (lub nie istniało), spróbuj z points
+		
 			if (points === 0 && article.points !== undefined && article.points !== null) {
 				points = parseValue(article.points);
 			}	
@@ -180,24 +175,21 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 				createdAt: new Date().toISOString(),
 			}
 
-			// Natychmiastowa aktualizacja UI
+	
 			setUserResponses(prev => [...prev, newResponse])
 
-			// Następnie zapisz do bazy danych
+
 			await saveResponse(
 				questionId,
-				article.title, // Używamy tytułu artykułu jako tytułu pytania
-				points, // Poprawnie skonwertowane i ewentualnie podzielone punkty
+				article.title, 
+				points,
 				'Artykuły naukowe',
 				'pending'
 			)
 
 			toast.success('Artykuł został dodany do Twoich publikacji')
 
-			// Opcjonalnie, możemy odświeżyć dane z bazy po zapisie
-			// ale nie jest to konieczne, ponieważ już zaktualizowaliśmy UI
-			// const updatedResponses = await loadResponses("Artykuły naukowe");
-			// setUserResponses(updatedResponses);
+		
 		} catch (err) {
 			console.error('Error adding article to response:', err)
 			toast.error('Nie udało się dodać artykułu')
@@ -206,7 +198,6 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 		}
 	}
 
-	// Add a new function to handle article deletion
 	const handleDeleteArticle = async (responseId: string) => {
 		if (!userData?.email) {
 			toast.error('Musisz być zalogowany, aby usunąć artykuł')
@@ -219,7 +210,7 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 			const success = await deleteResponse(responseId)
 			
 			if (success) {
-				// Update local state to reflect the deletion
+			
 				setUserResponses(prev => prev.filter(response => response.id !== responseId))
 				toast.success('Artykuł został usunięty z Twoich publikacji')
 			} else {
@@ -233,10 +224,10 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 		}
 	}
 
-	// Renderowanie komponentu
+
 	return (
 		<div className="h-full p-6 pb-1 bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col">
-			{/* Nagłówek z tytułem i przyciskiem zamknięcia */}
+	
 			<div className="flex justify-between items-center mb-6">
 				<h2 className="text-2xl font-semibold text-gray-800">Moje publikacje naukowe</h2>
 				{onClose && (
@@ -250,10 +241,9 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 				)}
 			</div>
 
-			{/* Wyświetlanie błędu */}
+	
 			{error && <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md mb-4">{error}</div>}
 
-			{/* Stan ładowania */}
 			{loading ? (
 				<div className="flex-1 flex items-center justify-center">
 					<div className="text-center">
@@ -263,7 +253,7 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 				</div>
 			) : (
 				<>
-					{/* Brak artykułów */}
+		
 					{articles.length === 0 ? (
 						<div className="flex-1 flex items-center justify-center">
 							<div className="text-center max-w-md">
@@ -276,7 +266,7 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 						</div>
 					) : (
 						<>
-							{/* Lista artykułów */}
+						
 							<div className="flex-1 overflow-y-auto pr-2 mb-4">
 								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 									{currentItems.map((article, index) => (
@@ -334,7 +324,7 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 														)}
 													</div>
 
-													{/* Punkty i identyfikatory */}
+												
 													<div className="flex flex-wrap gap-2 mt-2">
 														{article.pk && (
 															<Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
@@ -355,7 +345,6 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 														)}
 													</div>
 
-													{/* Link do pełnego tekstu */}
 													{article.ww && (
 														<div className="mt-2">
 															<a
@@ -400,7 +389,7 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 														)}
 													</Button>
 												
-													{/* New delete button - only show for pending or rejected articles */}
+										
 													{getArticleResponseStatus(article) && 
 													(getArticleResponseStatus(article).status === 'pending' || 
 													getArticleResponseStatus(article).status === 'rejected') && (
@@ -431,7 +420,7 @@ export default function LibraryEvaluationComponent({ onClose }: LibraryEvaluatio
 							</div>
 						</div>
 
-						{/* Paginacja */}
+				
 						{totalPages > 1 && (
 							<div className="flex justify-center mt-4 border-t border-gray-100 pt-4">
 								<div className="flex space-x-2">

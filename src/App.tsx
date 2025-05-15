@@ -6,12 +6,12 @@ import LibraryEvaluationComponent from "./components/library/LibraryEvaluationCo
 import QuestionsComponent from "./components/questions/QuestionsComponent"
 import { UserManagementComponent } from "./components/users/UserManagementComponent"
 import { useAuth, AuthProvider } from "./contexts/AuthContext"
-import { useUserResponses } from "./services/firebase/useUserResponses"
+import { useResponses } from "./services/firebase/responses/useResponses"
 import Header from "./components/layout/Header" 
 import { useState, useEffect } from "react"
 import { Toaster } from "sonner"
 import { ProfileComponent } from "./components/profile/ProfileComponent"
-import { ProfileRoute } from "./components/profile/ProfileRoute"
+
 
 function AppContent() {
 	// Inicjalizacja stanów aplikacji
@@ -23,11 +23,10 @@ function AppContent() {
 	
 	// Pobieranie funkcji i danych z kontekstu uwierzytelniania
 	const { isAuthenticated, isLoading, logout, userData, hasRole } = useAuth()
-	const { loadResponses } = useUserResponses()
+	const { loadResponses } = useResponses()
 	
 	// Sprawdzanie uprawnień użytkownika
 	const canEditQuestions = hasRole('admin') || hasRole('dziekan')
-	const canManageLibrary = hasRole('admin') || hasRole('library') || hasRole('biblioteka')
 
 	// Lista dostępnych kategorii
 	const categories = [
@@ -74,7 +73,7 @@ function AppContent() {
 		}
 	}
 
-	// Funkcje obsługujące przełączanie widoków aplikacji
+	
 	const handleEditQuestions = () => {
 		if (canEditQuestions) {
 			setIsEditingQuestions(true)
@@ -92,7 +91,7 @@ function AppContent() {
 	}
 
 	const handleManageLibrary = () => {
-		// Remove role check - make it available to everyone
+		
 		console.log('Setting isManagingLibrary to true')
 		setIsManagingLibrary(true)
 		setIsManagingUsers(false)
@@ -108,9 +107,6 @@ function AppContent() {
 		setIsManagingUsers(false)
 	}
 
-	const handleCloseLibraryManagement = () => {
-		setIsManagingLibrary(false)
-	}
 
 	const handleSaveQuestions = (updatedQuestions: any) => {
 		console.log('Updated questions:', updatedQuestions)
@@ -145,7 +141,7 @@ function AppContent() {
 						selectedCategory={selectedCategory}
 						setSelectedCategory={setSelectedCategory}
 						onLogout={logout}
-						userData={userData}
+						userData={userData || undefined}
 						onEditQuestions={handleEditQuestions}
 						onManageUsers={handleManageUsers}
 						onManageLibrary={handleManageLibrary}
@@ -186,7 +182,7 @@ function AppContent() {
 	)
 }
 
-// Główny komponent aplikacji owinięty w dostawcę kontekstu uwierzytelniania
+
 function App() {
 	return (
 		<AuthProvider>

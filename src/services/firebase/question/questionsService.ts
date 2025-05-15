@@ -1,6 +1,10 @@
+/**
+ * Serwis do zarządzania pytaniami oceny pracownika w bazie Firestore.
+ * Obsługuje operacje CRUD na kolekcji Questions.
+ */
 import { collection, addDoc, updateDoc, doc, deleteDoc, getDocs, query, where } from 'firebase/firestore';
-import { db } from '../../../firebase';
-import { Question } from '../../types';
+import { db } from '../../../../firebase'
+import { Question } from '../../../types';
 
 /**
  * Pobiera pytania dla danej kategorii
@@ -18,12 +22,12 @@ export async function fetchQuestionsByCategory(categoryName: string): Promise<Qu
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       
-      // Konwersja tooltip na tablicę, jeśli to string
+      
       const tooltip = typeof data.tooltip === 'string' 
         ? data.tooltip.split(',') 
         : (Array.isArray(data.tooltip) ? data.tooltip : []);
       
-      // Check if this is the library-evaluated question
+    
       const isLibraryEvaluated = 
         data.title === "Autorstwo artykułu/monografii (dotyczy pracowników dydaktycznych)" ||
         data.isLibraryEvaluated === true;
@@ -46,9 +50,7 @@ export async function fetchQuestionsByCategory(categoryName: string): Promise<Qu
   }
 }
 
-/**
- * Dodaje nowe pytanie
- */
+
 export async function addQuestion(question: Omit<Question, 'id'>): Promise<string> {
   try {
     const docRef = await addDoc(collection(db, 'Questions'), {
@@ -62,9 +64,6 @@ export async function addQuestion(question: Omit<Question, 'id'>): Promise<strin
   }
 }
 
-/**
- * Aktualizuje istniejące pytanie
- */
 export async function updateQuestion(id: string, question: Partial<Question>): Promise<void> {
   try {
     await updateDoc(doc(db, 'Questions', id), {
@@ -77,9 +76,7 @@ export async function updateQuestion(id: string, question: Partial<Question>): P
   }
 }
 
-/**
- * Usuwa pytanie
- */
+
 export async function deleteQuestion(id: string): Promise<void> {
   try {
     await deleteDoc(doc(db, 'Questions', id));

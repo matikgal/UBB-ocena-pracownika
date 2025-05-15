@@ -4,12 +4,11 @@
  * zapisywanie, aktualizację i usuwanie odpowiedzi użytkownika.
  */
 import { useState, useEffect, useRef } from 'react'
-import { collection, getDocs, query, where } from 'firebase/firestore'
-import { db } from '../../../firebase'
-import { useUserResponses } from './useUserResponses'
-import { useAuth } from '../../contexts/AuthContext'
+import { useResponses } from './useResponses'
+import { useAuth } from '../../../contexts/AuthContext'
 import { toast } from 'sonner'
-import { Question, QuestionState } from '../../types'
+import { Question, QuestionState } from '../../../types'
+import { responseService } from './responseService'
 
 export function useQuestions(selectedCategory: string) {
   const [questionStates, setQuestionStates] = useState<Record<string, QuestionState>>({})
@@ -18,7 +17,7 @@ export function useQuestions(selectedCategory: string) {
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   
-  const { saveResponse, loadResponses, responses, deleteResponse } = useUserResponses()
+  const { saveResponse, loadResponses, responses, deleteResponse } = useResponses()
   const { userData } = useAuth()
   
   const dataLoadedRef = useRef<Record<string, boolean>>({});
@@ -50,53 +49,31 @@ export function useQuestions(selectedCategory: string) {
 
   const fetchQuestions = async () => {
     try {
-      console.log('Fetching questions for category:', selectedCategory)
-  
-      const q = query(collection(db, 'Questions'), where('category', '==', selectedCategory))
-  
-      const querySnapshot = await getDocs(q)
-      const fetchedQuestions: Question[] = []
-  
-      querySnapshot.forEach(doc => {
-        const data = doc.data()
-  
-        const tooltip =
-          typeof data.tooltip === 'string' ? data.tooltip.split(',') : Array.isArray(data.tooltip) ? data.tooltip : []
-  
-        const isLibraryEvaluated = 
-          data.title === "Autorstwo artykułu/monografii (dotyczy pracowników dydaktycznych)" ||
-          data.isLibraryEvaluated === true;
-  
-        fetchedQuestions.push({
-          id: doc.id,
-          ...data,
-          tooltip: tooltip,
-          status: data.status,
-          isLibraryEvaluated: isLibraryEvaluated
-        } as Question)
-      })
-  
-      setQuestions(fetchedQuestions)
-      initializeQuestionStates(fetchedQuestions)
+      console.log('Fetching questions for category:', selectedCategory);
+      
+      const fetchedQuestions = await responseService.fetchQuestions(selectedCategory);
+      
+      setQuestions(fetchedQuestions);
+      initializeQuestionStates(fetchedQuestions);
     } catch (err) {
-      console.error('Error fetching questions:', err)
-      setError('Nie udało się pobrać pytań')
+      console.error('Error fetching questions:', err);
+      setError('Nie udało się pobrać pytań');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (questions.length > 0 && responses) {
-      initializeQuestionStates(questions)
+      initializeQuestionStates(questions);
     }
-  }, [responses, questions])
+  }, [responses, questions]);
 
   const initializeQuestionStates = (fetchedQuestions: Question[]) => {
-    const initialStates: Record<string, QuestionState> = {}
+    const initialStates: Record<string, QuestionState> = {};
   
     fetchedQuestions.forEach(question => {
-      const existingResponse = responses.find(r => r.questionId === question.id)
+      const existingResponse = responses.find((r: { questionId: string }) => r.questionId === question.id);
   
       if (existingResponse) {
         question.status = existingResponse.status;
@@ -111,11 +88,11 @@ export function useQuestions(selectedCategory: string) {
           : typeof question.points === 'number'
           ? question.points.toString()
           : '0',
-      }
-    })
+      };
+    });
   
-    setQuestionStates(initialStates)
-  }
+    setQuestionStates(initialStates);
+  };
 
   const handleCheckboxChange = (questionId: string) => {
     const isCurrentlyChecked = questionStates[questionId]?.checked;
@@ -136,8 +113,8 @@ export function useQuestions(selectedCategory: string) {
         ...prev[questionId],
         value,
       },
-    }))
-  }
+    }));
+  };
 
   useEffect(() => {
     if (error) {
@@ -205,7 +182,7 @@ export function useQuestions(selectedCategory: string) {
     try {
       setLoading(true);
       
-      const response = responses.find(r => r.questionId === questionId);
+      const response = responses.find((r: { questionId: string }) => r.questionId === questionId);
       
       if (!response || !response.id) {
         setError('Nie znaleziono odpowiedzi do usunięcia');
