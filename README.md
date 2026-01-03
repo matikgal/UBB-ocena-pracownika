@@ -28,4 +28,6 @@ System Oceny Pracowników UBB to odpowiedź na potrzebę usprawnienia procesów 
 ## Kontakt
 
 <br>
-_Stworzone przez Mateusz Gałuszka Jakub Gałosz_
+Stworzone przez:
+Mateusz Gałuszka
+Jakub Gałosz
