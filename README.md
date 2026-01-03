@@ -1,54 +1,33 @@
-# React + TypeScript + Vite
+# System Oceny Pracowników UBB
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Kompleksowa platforma cyfrowa do obsługi procesu okresowej oceny pracowników naukowo-dydaktycznych. Narzędzie automatyzuje zbieranie danych o osiągnięciach, umożliwia ich weryfikację oraz generowanie raportów, zastępując tradycyjny obieg dokumentów nowoczesnym interfejsem webowym.
 
-Currently, two official plugins are available:
+## Demo
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Zobacz aplikację na żywo: <a href="#" target="_blank">Link (Wersja deweloperska)</a>
 
-## Expanding the ESLint configuration
+## O projekcie
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+System Oceny Pracowników UBB to odpowiedź na potrzebę usprawnienia procesów administracyjnych na uczelni. Aplikacja stanowi centralny hub dla pracowników, w którym mogą oni na bieżąco ewidencjonować swoje sukcesy dydaktyczne, naukowe i organizacyjne. Kluczowym elementem systemu jest elastyczność – administratorzy mają możliwość dynamicznego zarządzania pytaniami i kryteriami oceny. Dzięki integracji z SSO i chmurą Firebase, system gwarantuje wysoki poziom bezpieczeństwa i dostępności.
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+## Technologie
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- **Frontend:** ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
+- **Backend / Auth:** ![Firebase](https://img.shields.io/badge/firebase-%23039BE5.svg?style=for-the-badge&logo=firebase) ![Keycloak](https://img.shields.io/badge/keycloak-add8e6.svg?style=for-the-badge&logo=keycloak&logoColor=white)
+- **Inne:** ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white) ![Lucide React](https://img.shields.io/badge/Lucide_React-F56565.svg?style=for-the-badge&logo=lucide&logoColor=white) ![Radix UI](https://img.shields.io/badge/radix%20ui-161618.svg?style=for-the-badge&logo=radix-ui&logoColor=white)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Główne funkcjonalności
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+- **Wielowymiarowa Ankieta:** Obsługa złożonych formularzy oceny podzielonych na kategorie (Dydaktyka, Nauka, Organizacja).
+- **Integracja SSO Keycloak:** Bezpieczne i wygodne logowanie przy użyciu uczelnianego konta, z automatycznym mapowaniem ról (Pracownik, Dziekan, Admin).
+- **Zarządzanie Pytaniami:** Panel administratora umożliwiający edycję, dodawanie i usuwanie pytań ankietowych bez ingerencji w kod.
+- **System Uprawnień:** Dedykowane widoki i funkcje dla różnych grup użytkowników (Weryfikacja przez Dziekana, Zarządzanie przez Admina).
+- **Ewidencja Biblioteczna:** Specjalny moduł do integracji i oceny dorobku publikacyjnego.
+- **Nowoczesny UI/UX:** Responsywny interfejs zaprojektowany w oparciu o komponenty Shadcn UI i Styled z TailwindCSS.
+
+## Kontakt
+
+<br>
+_Stworzone przez_
+_Mateusz Gałuszka_
+_Jakub Gałosz_
