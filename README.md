@@ -2,10 +2,6 @@
 
 Kompleksowa platforma cyfrowa do obsługi procesu okresowej oceny pracowników naukowo-dydaktycznych. Narzędzie automatyzuje zbieranie danych o osiągnięciach, umożliwia ich weryfikację oraz generowanie raportów, zastępując tradycyjny obieg dokumentów nowoczesnym interfejsem webowym.
 
-## Demo
-
-Zobacz aplikację na żywo: <a href="#" target="_blank">Link (Wersja deweloperska)</a>
-
 ## O projekcie
 
 System Oceny Pracowników UBB to odpowiedź na potrzebę usprawnienia procesów administracyjnych na uczelni. Aplikacja stanowi centralny hub dla pracowników, w którym mogą oni na bieżąco ewidencjonować swoje sukcesy dydaktyczne, naukowe i organizacyjne. Kluczowym elementem systemu jest elastyczność – administratorzy mają możliwość dynamicznego zarządzania pytaniami i kryteriami oceny. Dzięki integracji z SSO i chmurą Firebase, system gwarantuje wysoki poziom bezpieczeństwa i dostępności.
